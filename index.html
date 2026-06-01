@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f7b63" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>Gym Workout Log</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./assets/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">Training log</p>
+          <h1>Gym Workout Log</h1>
+        </div>
+
+        <details class="user-panel" id="userPanel">
+          <summary>
+            <span>
+              <small>Current user</small>
+              <strong id="activeUserName">Abhinav</strong>
+            </span>
+            <span class="summary-action">Manage</span>
+          </summary>
+
+          <div class="user-controls">
+            <label>
+              User
+              <select id="userSelect"></select>
+            </label>
+
+            <form id="userForm" class="user-form">
+              <label class="sr-only" for="newUserName">New user name</label>
+              <input id="newUserName" type="text" placeholder="New user" autocomplete="off" />
+              <button class="secondary-action" type="submit">Add user</button>
+            </form>
+
+            <button class="secondary-action danger" id="deleteUser" type="button">Delete selected user</button>
+          </div>
+        </details>
+      </header>
+
+      <nav class="view-tabs" aria-label="App views">
+        <button class="tab-button is-active" type="button" data-view="log">Log workout</button>
+        <button class="tab-button" type="button" data-view="history">History</button>
+      </nav>
+
+      <section class="view is-active" id="logView" aria-label="Workout logger">
+        <section class="panel entry-panel">
+          <div class="panel-title">
+            <div>
+              <p class="eyebrow">Daily session</p>
+              <h2>Log workout</h2>
+            </div>
+            <button class="icon-button" id="resetForm" type="button" title="Clear form" aria-label="Clear form">
+              <span aria-hidden="true">&#8634;</span>
+            </button>
+          </div>
+
+          <form id="workoutForm" class="workout-form">
+            <input type="hidden" id="editingId" />
+
+            <div class="form-grid two">
+              <label>
+                Date
+                <input id="date" type="date" required />
+              </label>
+
+              <label>
+                Workout
+                <input id="workoutName" type="text" placeholder="Push, Pull, Legs..." required />
+              </label>
+            </div>
+
+            <section class="exercise-builder" aria-label="Exercises">
+              <div class="section-row">
+                <h3>Exercises</h3>
+                <span id="exerciseCount" class="soft-label">1 exercise</span>
+              </div>
+              <div id="exerciseList" class="exercise-list"></div>
+              <button class="secondary-action add-exercise-action" id="addExercise" type="button">Add exercise</button>
+            </section>
+
+            <label>
+              Notes
+              <textarea id="notes" rows="4" placeholder="Tempo, RPE, form notes..."></textarea>
+            </label>
+
+            <button class="primary-action" type="submit" id="submitButton">Save session</button>
+          </form>
+        </section>
+      </section>
+
+      <section class="view" id="historyView" aria-label="Workout history">
+        <nav class="sub-tabs" aria-label="History views">
+          <button class="sub-tab is-active" type="button" data-history-view="sessions">Sessions</button>
+          <button class="sub-tab" type="button" data-history-view="progress">Progress</button>
+        </nav>
+
+        <section class="history-subview is-active" id="sessionsView">
+          <header class="toolbar">
+            <div class="stats" aria-label="Workout statistics">
+              <div>
+                <span id="totalLogs">0</span>
+                <small>sessions</small>
+              </div>
+              <div>
+                <span id="totalVolume">0</span>
+                <small>kg volume</small>
+              </div>
+              <div>
+                <span id="recentDate">-</span>
+                <small>latest</small>
+              </div>
+            </div>
+          </header>
+
+          <section class="calendar-card" aria-label="Workout calendar">
+            <div class="calendar-header">
+              <button class="icon-button" id="prevMonth" type="button" title="Previous month" aria-label="Previous month">
+                <span aria-hidden="true">&#8249;</span>
+              </button>
+              <h2 id="calendarTitle"></h2>
+              <button class="icon-button" id="nextMonth" type="button" title="Next month" aria-label="Next month">
+                <span aria-hidden="true">&#8250;</span>
+              </button>
+            </div>
+            <div class="weekday-row" aria-hidden="true">
+              <span>Mon</span>
+              <span>Tue</span>
+              <span>Wed</span>
+              <span>Thu</span>
+              <span>Fri</span>
+              <span>Sat</span>
+              <span>Sun</span>
+            </div>
+            <div id="calendarGrid" class="calendar-grid"></div>
+          </section>
+
+          <div id="calendarEmptyState" class="empty-state">
+            <h2>No workouts in this month</h2>
+            <p>Workout days will be highlighted here after you log sessions.</p>
+          </div>
+        </section>
+
+        <section class="history-subview" id="progressView">
+          <header class="toolbar">
+            <div class="progress-controls">
+              <label>
+                Exercise
+                <select id="progressExercise"></select>
+              </label>
+              <div class="progress-summary" id="progressSummary"></div>
+            </div>
+          </header>
+
+          <div id="progressEmptyState" class="empty-state">
+            <h2>No progress data yet</h2>
+            <p>Choose an exercise after logging a few workouts to compare sets, reps, and weight over time.</p>
+          </div>
+
+          <div id="progressList" class="progress-list" aria-live="polite"></div>
+        </section>
+      </section>
+    </main>
+
+    <section class="detail-screen" id="sessionDetail" aria-label="Session detail" hidden>
+      <div class="detail-shell">
+        <header class="detail-header">
+          <button class="secondary-action" id="closeDetail" type="button">Back</button>
+          <div>
+            <p class="eyebrow" id="detailDate"></p>
+            <h2 id="detailTitle"></h2>
+          </div>
+          <span class="detail-count" id="detailSessionCount"></span>
+        </header>
+
+        <div class="detail-metrics" id="detailMetrics"></div>
+        <div class="detail-exercises" id="detailExercises"></div>
+        <p class="detail-notes" id="detailNotes"></p>
+      </div>
+    </section>
+
+    <template id="exerciseTemplate">
+      <article class="exercise-card">
+        <button class="exercise-summary-button" type="button">
+          <span class="summary-title">New exercise</span>
+          <span class="summary-meta">Tap to edit</span>
+        </button>
+
+        <div class="exercise-body">
+          <div class="exercise-heading">
+            <label>
+              Exercise
+              <select class="exercise-picker" required></select>
+            </label>
+          </div>
+
+          <div class="custom-exercise-panel" hidden>
+            <div class="form-grid three">
+              <label>
+                New exercise
+                <input class="custom-exercise-name" type="text" placeholder="Incline dumbbell press" />
+              </label>
+              <label>
+                Muscle/type
+                <select class="custom-muscle"></select>
+              </label>
+              <label>
+                Mode
+                <select class="custom-mode">
+                  <option value="strength">Strength</option>
+                  <option value="bodyweight">Bodyweight</option>
+                  <option value="cardio">Cardio</option>
+                </select>
+              </label>
+            </div>
+            <button class="secondary-action save-custom-exercise" type="button">Save exercise</button>
+          </div>
+
+          <div class="exercise-meta-grid">
+            <label>
+              Muscle/type
+              <select class="exercise-muscle" required></select>
+            </label>
+            <label>
+              Mode
+              <select class="exercise-mode" required>
+                <option value="strength">Strength</option>
+                <option value="bodyweight">Bodyweight</option>
+                <option value="cardio">Cardio</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="set-list"></div>
+
+          <div class="exercise-actions">
+            <button class="secondary-action add-set" type="button">Add set</button>
+            <button class="secondary-action collapse-exercise" type="button">Collapse</button>
+            <button class="secondary-action danger remove-exercise" type="button">Remove exercise</button>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <template id="strengthSetTemplate">
+      <div class="set-row strength-set-row">
+        <label>
+          Reps
+          <input class="set-reps" type="number" min="1" max="200" step="1" required />
+        </label>
+        <label>
+          <span class="weight-label">Weight</span>
+          <input class="set-weight" type="number" min="0" max="1000" step="0.5" placeholder="kg" />
+        </label>
+        <label class="failure-field">
+          <input class="set-failure" type="checkbox" />
+          Failure
+        </label>
+        <button class="secondary-action danger remove-set" type="button">Remove set</button>
+      </div>
+    </template>
+
+    <template id="cardioSetTemplate">
+      <div class="set-row cardio-set-row">
+        <label>
+          Duration
+          <input class="cardio-duration" type="number" min="0" max="600" step="0.5" placeholder="min" required />
+        </label>
+        <label>
+          Distance
+          <input class="cardio-distance" type="number" min="0" max="1000" step="0.01" placeholder="km" />
+        </label>
+        <label>
+          Intensity
+          <input class="cardio-intensity" type="text" placeholder="Speed, incline, level" />
+        </label>
+        <button class="secondary-action danger remove-set" type="button">Remove set</button>
+      </div>
+    </template>
+
+    <script src="./src/app.js"></script>
+  </body>
+</html>

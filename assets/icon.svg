@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Gym Workout Log icon">
+  <rect width="512" height="512" rx="112" fill="#0f7b63"/>
+  <path fill="#dff3ed" d="M132 184h36v144h-36zM344 184h36v144h-36zM84 216h36v80H84zM392 216h36v80h-36zM188 236h136v40H188z"/>
+  <path fill="#ffffff" d="M184 344h144v34H184zM184 134h144v34H184z"/>
+  <circle cx="256" cy="256" r="28" fill="#ffffff"/>
+</svg>
