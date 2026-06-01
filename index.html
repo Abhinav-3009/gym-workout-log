@@ -193,12 +193,25 @@
         </button>
 
         <div class="exercise-body">
-          <div class="exercise-heading">
+          <div class="exercise-meta-grid">
             <label>
-              Exercise
-              <select class="exercise-picker" required></select>
+              Muscle/type
+              <select class="exercise-muscle" required></select>
+            </label>
+            <label>
+              Mode
+              <select class="exercise-mode" required>
+                <option value="strength">Strength</option>
+                <option value="bodyweight">Bodyweight</option>
+                <option value="cardio">Cardio</option>
+              </select>
             </label>
           </div>
+
+          <label>
+            Exercise
+            <select class="exercise-picker" required></select>
+          </label>
 
           <div class="custom-exercise-panel" hidden>
             <div class="form-grid three">
@@ -220,21 +233,6 @@
               </label>
             </div>
             <button class="secondary-action save-custom-exercise" type="button">Save exercise</button>
-          </div>
-
-          <div class="exercise-meta-grid">
-            <label>
-              Muscle/type
-              <select class="exercise-muscle" required></select>
-            </label>
-            <label>
-              Mode
-              <select class="exercise-mode" required>
-                <option value="strength">Strength</option>
-                <option value="bodyweight">Bodyweight</option>
-                <option value="cardio">Cardio</option>
-              </select>
-            </label>
           </div>
 
           <div class="set-list"></div>

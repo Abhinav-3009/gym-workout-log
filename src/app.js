@@ -434,37 +434,36 @@ function renderMuscleOptions(select, selectedValue = "Chest") {
   });
 }
 
-function renderExercisePicker(select, selectedId = "") {
+function renderExercisePicker(select, selectedId = "", muscleGroup = "") {
   select.replaceChildren();
   const placeholder = document.createElement("option");
   placeholder.value = "";
-  placeholder.textContent = "Choose exercise";
+  placeholder.textContent = muscleGroup ? `Choose ${muscleGroup} exercise` : "Choose exercise";
   select.append(placeholder);
 
-  MUSCLE_GROUPS.forEach((group) => {
-    const options = getExerciseLibrary().filter((exercise) => exercise.muscleGroup === group);
-    if (!options.length) return;
-    const optgroup = document.createElement("optgroup");
-    optgroup.label = group;
-    options.forEach((exercise) => {
+  getExerciseLibrary()
+    .filter((exercise) => !muscleGroup || exercise.muscleGroup === muscleGroup)
+    .forEach((exercise) => {
       const option = document.createElement("option");
       option.value = exercise.id;
       option.textContent = exercise.name;
       option.selected = exercise.id === selectedId;
-      optgroup.append(option);
+      select.append(option);
     });
-    select.append(optgroup);
-  });
 
   const addOption = document.createElement("option");
   addOption.value = "__custom__";
-  addOption.textContent = "Add new exercise...";
+  addOption.textContent = muscleGroup ? `Add new ${muscleGroup} exercise...` : "Add new exercise...";
   select.append(addOption);
 }
 
 function renderAllExercisePickers() {
   exerciseList.querySelectorAll(".exercise-card").forEach((card) => {
-    renderExercisePicker(card.querySelector(".exercise-picker"), card.dataset.exerciseId || "");
+    renderExercisePicker(
+      card.querySelector(".exercise-picker"),
+      card.dataset.exerciseId || "",
+      card.querySelector(".exercise-muscle").value,
+    );
   });
 }
 
@@ -493,6 +492,7 @@ function applyExerciseDefinition(card, exercise) {
   card.dataset.mode = exercise.mode;
   card.querySelector(".exercise-muscle").value = exercise.muscleGroup;
   card.querySelector(".exercise-mode").value = exercise.mode;
+  renderExercisePicker(card.querySelector(".exercise-picker"), exercise.id, exercise.muscleGroup);
   card.querySelector(".custom-exercise-panel").hidden = true;
   ensureSetRowsForMode(card, exercise.mode);
   updateExerciseSummary(card);
@@ -513,6 +513,18 @@ function modeLabel(mode) {
   if (mode === "bodyweight") return "Bodyweight";
   if (mode === "cardio") return "Cardio";
   return "Strength";
+}
+
+function defaultModeForMuscle(muscleGroup) {
+  if (muscleGroup === "Cardio") return "cardio";
+  if (muscleGroup === "Bodyweight" || muscleGroup === "Core") return "bodyweight";
+  return "strength";
+}
+
+function clearSelectedExercise(card) {
+  card.dataset.exerciseId = "";
+  card.dataset.exerciseName = "";
+  card.querySelector(".exercise-picker").value = "";
 }
 
 function updateSetRemoveButtons(card) {
@@ -573,9 +585,9 @@ function addExercise(data = {}, options = {}) {
   card.dataset.exerciseName = fallbackDef.name;
   card.dataset.mode = fallbackDef.mode;
 
-  renderExercisePicker(card.querySelector(".exercise-picker"), fallbackDef.id);
   renderMuscleOptions(card.querySelector(".exercise-muscle"), fallbackDef.muscleGroup);
   renderMuscleOptions(card.querySelector(".custom-muscle"), fallbackDef.muscleGroup);
+  renderExercisePicker(card.querySelector(".exercise-picker"), fallbackDef.id, fallbackDef.muscleGroup);
   card.querySelector(".exercise-mode").value = fallbackDef.mode;
   card.querySelector(".custom-mode").value = fallbackDef.mode;
 
@@ -993,6 +1005,8 @@ exerciseList.addEventListener("change", (event) => {
     if (event.target.value === "__custom__") {
       card.dataset.exerciseId = "";
       card.dataset.exerciseName = "";
+      card.querySelector(".custom-muscle").value = card.querySelector(".exercise-muscle").value;
+      card.querySelector(".custom-mode").value = card.querySelector(".exercise-mode").value;
       card.querySelector(".custom-exercise-panel").hidden = false;
       updateExerciseSummary(card);
       return;
@@ -1008,6 +1022,16 @@ exerciseList.addEventListener("change", (event) => {
   }
 
   if (event.target.classList.contains("exercise-muscle")) {
+    const muscleGroup = event.target.value;
+    const nextMode = defaultModeForMuscle(muscleGroup);
+    card.querySelector(".exercise-mode").value = nextMode;
+    card.dataset.mode = nextMode;
+    card.querySelector(".custom-muscle").value = muscleGroup;
+    card.querySelector(".custom-mode").value = nextMode;
+    clearSelectedExercise(card);
+    renderExercisePicker(card.querySelector(".exercise-picker"), "", muscleGroup);
+    card.querySelector(".custom-exercise-panel").hidden = true;
+    ensureSetRowsForMode(card, nextMode);
     updateExerciseSummary(card);
   }
 });
@@ -1046,7 +1070,7 @@ exerciseList.addEventListener("click", (event) => {
     if (!duplicate) state.customExercises.push(exercise);
     saveState();
     renderAllExercisePickers();
-    renderExercisePicker(card.querySelector(".exercise-picker"), exercise.id);
+    renderExercisePicker(card.querySelector(".exercise-picker"), exercise.id, exercise.muscleGroup);
     applyExerciseDefinition(card, exercise);
     renderProgress();
     return;
