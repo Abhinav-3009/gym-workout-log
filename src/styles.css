@@ -56,15 +56,42 @@ button {
 .shell {
   width: min(960px, calc(100% - 28px));
   margin: 0 auto;
-  padding: 22px 0 30px;
+  padding: 16px 0 30px;
 }
 
 .app-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
   gap: 14px;
-  align-items: end;
-  margin-bottom: 14px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.brand-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.brand-mark {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(249, 115, 22, 0.42);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(249, 115, 22, 0.22), rgba(163, 230, 53, 0.12)),
+    var(--field);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+.brand-mark img {
+  display: block;
+  width: 26px;
+  height: 26px;
 }
 
 .eyebrow {
@@ -84,8 +111,15 @@ h3 {
 }
 
 h1 {
-  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-size: clamp(1.35rem, 3vw, 1.85rem);
   letter-spacing: 0;
+  font-weight: 920;
+  background: linear-gradient(135deg, var(--ink) 0%, var(--accent) 54%, var(--energy) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  text-shadow: 0 8px 26px rgba(163, 230, 53, 0.16);
 }
 
 h2 {
