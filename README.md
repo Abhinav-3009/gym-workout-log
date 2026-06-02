@@ -5,8 +5,8 @@ Offline-first gym workout log for phone use. The app stores data locally on the 
 ## Features
 
 - Log daily workout sessions with multiple exercises and sets.
-- Track strength, bodyweight, and cardio exercises with mode-specific fields.
-- Track reps, weight or added weight, failure sets, duration, distance, intensity, notes, and muscle/type.
+- Track exercises with purpose-built tracking types: weighted reps, bodyweight reps, timed holds, cardio, carries, and mobility.
+- Track reps, weight or added weight, failure sets, hold duration, cardio distance, carry distance, intensity, notes, and muscle/type.
 - Use the built-in exercise library or add custom exercises for the selected user.
 - Keep logs separate per selected user.
 - Review saved sessions in a Monday-first calendar with highlighted workout days.

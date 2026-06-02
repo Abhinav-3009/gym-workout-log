@@ -14,36 +14,49 @@ const MUSCLE_GROUPS = [
   "Cardio",
   "Other",
 ];
+const TRACKING_TYPES = {
+  WEIGHTED_REPS: "weighted-reps",
+  BODYWEIGHT_REPS: "bodyweight-reps",
+  TIMED_HOLD: "timed-hold",
+  CARDIO: "cardio",
+  CARRY: "carry",
+  MOBILITY: "mobility",
+};
 const BUILT_IN_EXERCISES = [
-  ["bench-press", "Bench press", "Chest", "strength"],
-  ["incline-dumbbell-press", "Incline dumbbell press", "Chest", "strength"],
-  ["chest-fly", "Chest fly", "Chest", "strength"],
-  ["lat-pulldown", "Lat pulldown", "Back", "strength"],
-  ["barbell-row", "Barbell row", "Back", "strength"],
-  ["seated-cable-row", "Seated cable row", "Back", "strength"],
-  ["overhead-press", "Overhead press", "Shoulders", "strength"],
-  ["lateral-raise", "Lateral raise", "Shoulders", "strength"],
-  ["rear-delt-fly", "Rear delt fly", "Shoulders", "strength"],
-  ["barbell-curl", "Barbell curl", "Biceps", "strength"],
-  ["dumbbell-curl", "Dumbbell curl", "Biceps", "strength"],
-  ["hammer-curl", "Hammer curl", "Biceps", "strength"],
-  ["triceps-pushdown", "Triceps pushdown", "Triceps", "strength"],
-  ["skull-crusher", "Skull crusher", "Triceps", "strength"],
-  ["overhead-triceps-extension", "Overhead triceps extension", "Triceps", "strength"],
-  ["squat", "Squat", "Legs", "strength"],
-  ["leg-press", "Leg press", "Legs", "strength"],
-  ["leg-curl", "Leg curl", "Legs", "strength"],
-  ["leg-extension", "Leg extension", "Legs", "strength"],
-  ["deadlift", "Deadlift", "Legs", "strength"],
-  ["plank", "Plank", "Core", "bodyweight"],
-  ["crunches", "Crunches", "Core", "bodyweight"],
-  ["push-ups", "Push-ups", "Bodyweight", "bodyweight"],
-  ["pull-ups", "Pull-ups", "Bodyweight", "bodyweight"],
-  ["dips", "Dips", "Bodyweight", "bodyweight"],
-  ["treadmill", "Treadmill", "Cardio", "cardio"],
-  ["cycling", "Cycling", "Cardio", "cardio"],
-  ["elliptical", "Elliptical", "Cardio", "cardio"],
-  ["rowing-machine", "Rowing machine", "Cardio", "cardio"],
+  ["bench-press", "Bench press", "Chest", TRACKING_TYPES.WEIGHTED_REPS],
+  ["incline-dumbbell-press", "Incline dumbbell press", "Chest", TRACKING_TYPES.WEIGHTED_REPS],
+  ["chest-fly", "Chest fly", "Chest", TRACKING_TYPES.WEIGHTED_REPS],
+  ["lat-pulldown", "Lat pulldown", "Back", TRACKING_TYPES.WEIGHTED_REPS],
+  ["barbell-row", "Barbell row", "Back", TRACKING_TYPES.WEIGHTED_REPS],
+  ["seated-cable-row", "Seated cable row", "Back", TRACKING_TYPES.WEIGHTED_REPS],
+  ["dead-hang", "Dead hang", "Back", TRACKING_TYPES.TIMED_HOLD],
+  ["overhead-press", "Overhead press", "Shoulders", TRACKING_TYPES.WEIGHTED_REPS],
+  ["lateral-raise", "Lateral raise", "Shoulders", TRACKING_TYPES.WEIGHTED_REPS],
+  ["rear-delt-fly", "Rear delt fly", "Shoulders", TRACKING_TYPES.WEIGHTED_REPS],
+  ["barbell-curl", "Barbell curl", "Biceps", TRACKING_TYPES.WEIGHTED_REPS],
+  ["dumbbell-curl", "Dumbbell curl", "Biceps", TRACKING_TYPES.WEIGHTED_REPS],
+  ["hammer-curl", "Hammer curl", "Biceps", TRACKING_TYPES.WEIGHTED_REPS],
+  ["triceps-pushdown", "Triceps pushdown", "Triceps", TRACKING_TYPES.WEIGHTED_REPS],
+  ["skull-crusher", "Skull crusher", "Triceps", TRACKING_TYPES.WEIGHTED_REPS],
+  ["overhead-triceps-extension", "Overhead triceps extension", "Triceps", TRACKING_TYPES.WEIGHTED_REPS],
+  ["squat", "Squat", "Legs", TRACKING_TYPES.WEIGHTED_REPS],
+  ["leg-press", "Leg press", "Legs", TRACKING_TYPES.WEIGHTED_REPS],
+  ["leg-curl", "Leg curl", "Legs", TRACKING_TYPES.WEIGHTED_REPS],
+  ["leg-extension", "Leg extension", "Legs", TRACKING_TYPES.WEIGHTED_REPS],
+  ["deadlift", "Deadlift", "Legs", TRACKING_TYPES.WEIGHTED_REPS],
+  ["wall-sit", "Wall sit", "Legs", TRACKING_TYPES.TIMED_HOLD],
+  ["farmer-carry", "Farmer carry", "Legs", TRACKING_TYPES.CARRY],
+  ["plank", "Plank", "Core", TRACKING_TYPES.TIMED_HOLD],
+  ["side-plank", "Side plank", "Core", TRACKING_TYPES.TIMED_HOLD],
+  ["crunches", "Crunches", "Core", TRACKING_TYPES.BODYWEIGHT_REPS],
+  ["push-ups", "Push-ups", "Bodyweight", TRACKING_TYPES.BODYWEIGHT_REPS],
+  ["pull-ups", "Pull-ups", "Bodyweight", TRACKING_TYPES.BODYWEIGHT_REPS],
+  ["dips", "Dips", "Bodyweight", TRACKING_TYPES.BODYWEIGHT_REPS],
+  ["treadmill", "Treadmill", "Cardio", TRACKING_TYPES.CARDIO],
+  ["cycling", "Cycling", "Cardio", TRACKING_TYPES.CARDIO],
+  ["elliptical", "Elliptical", "Cardio", TRACKING_TYPES.CARDIO],
+  ["rowing-machine", "Rowing machine", "Cardio", TRACKING_TYPES.CARDIO],
+  ["stretching", "Stretching", "Other", TRACKING_TYPES.MOBILITY],
 ].map(([id, name, muscleGroup, mode]) => ({ id: `builtin:${id}`, name, muscleGroup, mode }));
 
 const activeUserName = document.querySelector("#activeUserName");
@@ -88,8 +101,11 @@ const detailMetrics = document.querySelector("#detailMetrics");
 const detailExercises = document.querySelector("#detailExercises");
 const detailNotes = document.querySelector("#detailNotes");
 const exerciseTemplate = document.querySelector("#exerciseTemplate");
-const strengthSetTemplate = document.querySelector("#strengthSetTemplate");
+const repsSetTemplate = document.querySelector("#repsSetTemplate");
+const timedSetTemplate = document.querySelector("#timedSetTemplate");
 const cardioSetTemplate = document.querySelector("#cardioSetTemplate");
+const carrySetTemplate = document.querySelector("#carrySetTemplate");
+const mobilitySetTemplate = document.querySelector("#mobilitySetTemplate");
 
 let state = loadState();
 let calendarMonth = getMonthStart(getTodayValue());
@@ -156,7 +172,7 @@ function normalizeSessions(sessions) {
     workoutName: session.workoutName || "Workout",
     notes: session.notes || "",
     exercises: (session.exercises || []).map((exercise) => {
-      const mode = exercise.mode || (exercise.muscleGroup === "Cardio" ? "cardio" : "strength");
+      const mode = normalizeMode(exercise.mode || defaultModeForMuscle(exercise.muscleGroup));
       return {
         id: exercise.id || createId(),
         exerciseId: exercise.exerciseId || "",
@@ -170,19 +186,49 @@ function normalizeSessions(sessions) {
 }
 
 function normalizeSets(sets, mode) {
-  if (mode === "cardio") {
-    return sets.map((set) => ({
+  return sets.map((set) => normalizeSet(set, mode));
+}
+
+function normalizeMode(mode) {
+  if (mode === "strength") return TRACKING_TYPES.WEIGHTED_REPS;
+  if (mode === "bodyweight") return TRACKING_TYPES.BODYWEIGHT_REPS;
+  if (Object.values(TRACKING_TYPES).includes(mode)) return mode;
+  return TRACKING_TYPES.WEIGHTED_REPS;
+}
+
+function normalizeSet(set, mode) {
+  if (mode === TRACKING_TYPES.CARDIO) {
+    return {
       duration: Number(set.duration) || 0,
       distance: Number(set.distance) || 0,
       intensity: set.intensity || "",
-    }));
+    };
   }
-
-  return sets.map((set) => ({
+  if (mode === TRACKING_TYPES.TIMED_HOLD) {
+    return {
+      duration: Number(set.duration) || 0,
+      weight: Number(set.weight) || 0,
+      failure: Boolean(set.failure),
+    };
+  }
+  if (mode === TRACKING_TYPES.CARRY) {
+    return {
+      weight: Number(set.weight) || 0,
+      distance: Number(set.distance) || 0,
+      duration: Number(set.duration) || 0,
+    };
+  }
+  if (mode === TRACKING_TYPES.MOBILITY) {
+    return {
+      duration: Number(set.duration) || 0,
+      notes: set.notes || "",
+    };
+  }
+  return {
     reps: Number(set.reps) || 1,
     weight: Number(set.weight) || 0,
     failure: Boolean(set.failure),
-  }));
+  };
 }
 
 function migrateLegacyLogs(userId) {
@@ -209,7 +255,7 @@ function migrateLegacyLogs(userId) {
           exerciseId: "",
           name: log.exercise || "Exercise",
           muscleGroup: "Other",
-          mode: "strength",
+          mode: TRACKING_TYPES.WEIGHTED_REPS,
           sets,
         },
       ],
@@ -242,7 +288,7 @@ function hydrateMissingCustomExercises(loadedState) {
           userId: session.userId,
           name: exercise.name,
           muscleGroup: exercise.muscleGroup || "Other",
-          mode: exercise.mode || "strength",
+          mode: normalizeMode(exercise.mode || TRACKING_TYPES.WEIGHTED_REPS),
           createdAt: Date.now(),
         };
         loadedState.customExercises.push(custom);
@@ -345,7 +391,7 @@ function getSetVolume(set) {
 }
 
 function getExerciseVolume(exercise) {
-  if (exercise.mode === "cardio") return 0;
+  if (![TRACKING_TYPES.WEIGHTED_REPS, TRACKING_TYPES.BODYWEIGHT_REPS].includes(exercise.mode)) return 0;
   return exercise.sets.reduce((sum, set) => sum + getSetVolume(set), 0);
 }
 
@@ -359,14 +405,23 @@ function getSessionSets(session) {
 
 function getFailureSetCount(session) {
   return session.exercises.reduce((count, exercise) => {
-    if (exercise.mode === "cardio") return count;
+    if (![TRACKING_TYPES.WEIGHTED_REPS, TRACKING_TYPES.BODYWEIGHT_REPS, TRACKING_TYPES.TIMED_HOLD].includes(exercise.mode)) {
+      return count;
+    }
     return count + exercise.sets.filter((set) => set.failure).length;
   }, 0);
 }
 
-function describeStrengthSet(set, exercise) {
-  const weightLabel = exercise.mode === "bodyweight" ? "added" : "kg";
-  return `${formatNumber(set.weight || 0)}${weightLabel === "kg" ? "kg" : "kg added"} x ${set.reps}`;
+function describeRepsSet(set, exercise) {
+  const label = exercise.mode === TRACKING_TYPES.BODYWEIGHT_REPS ? "kg added" : "kg";
+  return `${formatNumber(set.weight || 0)}${label === "kg" ? "kg" : "kg added"} x ${set.reps}`;
+}
+
+function describeTimedSet(set) {
+  const parts = [`${formatNumber(set.duration || 0)} sec`];
+  if (set.weight) parts.push(`${formatNumber(set.weight)} kg added`);
+  if (set.failure) parts.push("failure");
+  return parts.join(" / ");
 }
 
 function describeCardioSet(set) {
@@ -376,15 +431,39 @@ function describeCardioSet(set) {
   return parts.join(" / ");
 }
 
+function describeCarrySet(set) {
+  const parts = [];
+  if (set.weight) parts.push(`${formatNumber(set.weight)} kg`);
+  if (set.distance) parts.push(`${formatNumber(set.distance)} m`);
+  if (set.duration) parts.push(`${formatNumber(set.duration)} sec`);
+  return parts.length ? parts.join(" / ") : "Carry";
+}
+
+function describeMobilitySet(set) {
+  const parts = [];
+  if (set.duration) parts.push(`${formatNumber(set.duration)} min`);
+  if (set.notes) parts.push(set.notes);
+  return parts.length ? parts.join(" / ") : "Mobility";
+}
+
 function summarizeExercise(exercise) {
-  if (exercise.mode === "cardio") {
+  if (exercise.mode === TRACKING_TYPES.CARDIO) {
     return exercise.sets.map(describeCardioSet).join(", ");
   }
-  return exercise.sets.map((set) => describeStrengthSet(set, exercise)).join(", ");
+  if (exercise.mode === TRACKING_TYPES.TIMED_HOLD) {
+    return exercise.sets.map(describeTimedSet).join(", ");
+  }
+  if (exercise.mode === TRACKING_TYPES.CARRY) {
+    return exercise.sets.map(describeCarrySet).join(", ");
+  }
+  if (exercise.mode === TRACKING_TYPES.MOBILITY) {
+    return exercise.sets.map(describeMobilitySet).join(", ");
+  }
+  return exercise.sets.map((set) => describeRepsSet(set, exercise)).join(", ");
 }
 
 function getBestSet(exercise) {
-  if (exercise.mode === "cardio") return null;
+  if (![TRACKING_TYPES.WEIGHTED_REPS, TRACKING_TYPES.BODYWEIGHT_REPS].includes(exercise.mode)) return null;
   return [...exercise.sets].sort((a, b) => {
     if (Number(b.weight) !== Number(a.weight)) return Number(b.weight) - Number(a.weight);
     return Number(b.reps) - Number(a.reps);
@@ -500,7 +579,7 @@ function applyExerciseDefinition(card, exercise) {
 
 function updateExerciseSummary(card) {
   const name = card.dataset.exerciseName || "New exercise";
-  const mode = card.dataset.mode || card.querySelector(".exercise-mode").value || "strength";
+  const mode = normalizeMode(card.dataset.mode || card.querySelector(".exercise-mode").value);
   const muscle = card.querySelector(".exercise-muscle").value || "Other";
   const sets = getExerciseDataFromCard(card).sets;
   const title = card.querySelector(".summary-title");
@@ -510,15 +589,19 @@ function updateExerciseSummary(card) {
 }
 
 function modeLabel(mode) {
-  if (mode === "bodyweight") return "Bodyweight";
-  if (mode === "cardio") return "Cardio";
-  return "Strength";
+  if (mode === TRACKING_TYPES.BODYWEIGHT_REPS) return "Bodyweight reps";
+  if (mode === TRACKING_TYPES.TIMED_HOLD) return "Timed hold";
+  if (mode === TRACKING_TYPES.CARDIO) return "Cardio";
+  if (mode === TRACKING_TYPES.CARRY) return "Carry / distance";
+  if (mode === TRACKING_TYPES.MOBILITY) return "Mobility";
+  return "Weighted reps";
 }
 
 function defaultModeForMuscle(muscleGroup) {
-  if (muscleGroup === "Cardio") return "cardio";
-  if (muscleGroup === "Bodyweight" || muscleGroup === "Core") return "bodyweight";
-  return "strength";
+  if (muscleGroup === "Cardio") return TRACKING_TYPES.CARDIO;
+  if (muscleGroup === "Bodyweight") return TRACKING_TYPES.BODYWEIGHT_REPS;
+  if (muscleGroup === "Core") return TRACKING_TYPES.TIMED_HOLD;
+  return TRACKING_TYPES.WEIGHTED_REPS;
 }
 
 function clearSelectedExercise(card) {
@@ -535,15 +618,26 @@ function updateSetRemoveButtons(card) {
 }
 
 function addSet(card, data = {}) {
-  const mode = card.dataset.mode || card.querySelector(".exercise-mode").value || "strength";
-  const template = mode === "cardio" ? cardioSetTemplate : strengthSetTemplate;
+  const mode = normalizeMode(card.dataset.mode || card.querySelector(".exercise-mode").value);
+  const template = getSetTemplate(mode);
   const node = template.content.firstElementChild.cloneNode(true);
-  if (mode === "cardio") {
+  if (mode === TRACKING_TYPES.CARDIO) {
     node.querySelector(".cardio-duration").value = data.duration ?? "";
     node.querySelector(".cardio-distance").value = data.distance ?? "";
     node.querySelector(".cardio-intensity").value = data.intensity ?? "";
+  } else if (mode === TRACKING_TYPES.TIMED_HOLD) {
+    node.querySelector(".timed-duration").value = data.duration ?? "";
+    node.querySelector(".timed-weight").value = data.weight ?? 0;
+    node.querySelector(".timed-failure").checked = Boolean(data.failure);
+  } else if (mode === TRACKING_TYPES.CARRY) {
+    node.querySelector(".carry-weight").value = data.weight ?? "";
+    node.querySelector(".carry-distance").value = data.distance ?? "";
+    node.querySelector(".carry-duration").value = data.duration ?? "";
+  } else if (mode === TRACKING_TYPES.MOBILITY) {
+    node.querySelector(".mobility-duration").value = data.duration ?? "";
+    node.querySelector(".mobility-notes").value = data.notes ?? "";
   } else {
-    node.querySelector(".weight-label").textContent = mode === "bodyweight" ? "Added weight" : "Weight";
+    node.querySelector(".weight-label").textContent = mode === TRACKING_TYPES.BODYWEIGHT_REPS ? "Added weight" : "Weight";
     node.querySelector(".set-reps").value = data.reps ?? 10;
     node.querySelector(".set-weight").value = data.weight ?? 0;
     node.querySelector(".set-failure").checked = Boolean(data.failure);
@@ -553,18 +647,43 @@ function addSet(card, data = {}) {
   updateExerciseSummary(card);
 }
 
+function getSetTemplate(mode) {
+  if (mode === TRACKING_TYPES.CARDIO) return cardioSetTemplate;
+  if (mode === TRACKING_TYPES.TIMED_HOLD) return timedSetTemplate;
+  if (mode === TRACKING_TYPES.CARRY) return carrySetTemplate;
+  if (mode === TRACKING_TYPES.MOBILITY) return mobilitySetTemplate;
+  return repsSetTemplate;
+}
+
 function ensureSetRowsForMode(card, mode) {
-  const existingMode = card.querySelector(".set-row")?.classList.contains("cardio-set-row")
-    ? "cardio"
-    : "strength";
-  if (card.querySelector(".set-row") && (mode === "cardio") === (existingMode === "cardio")) {
+  const normalizedMode = normalizeMode(mode);
+  const existingMode = getModeFromSetRow(card.querySelector(".set-row"));
+  if (card.querySelector(".set-row") && existingMode === normalizedMode) {
     card.querySelectorAll(".weight-label").forEach((label) => {
-      label.textContent = mode === "bodyweight" ? "Added weight" : "Weight";
+      label.textContent = normalizedMode === TRACKING_TYPES.BODYWEIGHT_REPS ? "Added weight" : "Weight";
     });
     return;
   }
   card.querySelector(".set-list").replaceChildren();
   addSet(card);
+}
+
+function getModeFromSetRow(row) {
+  if (!row) return "";
+  if (row.classList.contains("cardio-set-row")) return TRACKING_TYPES.CARDIO;
+  if (row.classList.contains("timed-set-row")) return TRACKING_TYPES.TIMED_HOLD;
+  if (row.classList.contains("carry-set-row")) return TRACKING_TYPES.CARRY;
+  if (row.classList.contains("mobility-set-row")) return TRACKING_TYPES.MOBILITY;
+  return TRACKING_TYPES.WEIGHTED_REPS;
+}
+
+function getDefaultSet(mode) {
+  const normalizedMode = normalizeMode(mode);
+  if (normalizedMode === TRACKING_TYPES.CARDIO) return { duration: "", distance: "", intensity: "" };
+  if (normalizedMode === TRACKING_TYPES.TIMED_HOLD) return { duration: "", weight: 0, failure: false };
+  if (normalizedMode === TRACKING_TYPES.CARRY) return { weight: "", distance: "", duration: "" };
+  if (normalizedMode === TRACKING_TYPES.MOBILITY) return { duration: "", notes: "" };
+  return { reps: 10, weight: 0, failure: false };
 }
 
 function addExercise(data = {}, options = {}) {
@@ -578,7 +697,7 @@ function addExercise(data = {}, options = {}) {
     id: data.exerciseId || "",
     name: data.name || "",
     muscleGroup: data.muscleGroup || "Chest",
-    mode: data.mode || "strength",
+    mode: normalizeMode(data.mode || TRACKING_TYPES.WEIGHTED_REPS),
   };
   card.dataset.id = data.id || createId();
   card.dataset.exerciseId = fallbackDef.id;
@@ -591,7 +710,7 @@ function addExercise(data = {}, options = {}) {
   card.querySelector(".exercise-mode").value = fallbackDef.mode;
   card.querySelector(".custom-mode").value = fallbackDef.mode;
 
-  const sets = data.sets?.length ? data.sets : [fallbackDef.mode === "cardio" ? {} : { reps: 10, weight: 0, failure: false }];
+  const sets = data.sets?.length ? data.sets : [getDefaultSet(fallbackDef.mode)];
   sets.forEach((set) => addSet(card, set));
   exerciseList.append(card);
   setExerciseExpanded(card, options.expanded !== false);
@@ -612,7 +731,7 @@ function resetForm() {
 }
 
 function getExerciseDataFromCard(card) {
-  const mode = card.dataset.mode || card.querySelector(".exercise-mode").value;
+  const mode = normalizeMode(card.dataset.mode || card.querySelector(".exercise-mode").value);
   return {
     id: card.dataset.id || createId(),
     exerciseId: card.dataset.exerciseId || "",
@@ -620,11 +739,31 @@ function getExerciseDataFromCard(card) {
     muscleGroup: card.querySelector(".exercise-muscle").value,
     mode,
     sets: [...card.querySelectorAll(".set-row")].map((setRow) => {
-      if (mode === "cardio") {
+      if (mode === TRACKING_TYPES.CARDIO) {
         return {
           duration: Number(setRow.querySelector(".cardio-duration").value || 0),
           distance: Number(setRow.querySelector(".cardio-distance").value || 0),
           intensity: setRow.querySelector(".cardio-intensity").value.trim(),
+        };
+      }
+      if (mode === TRACKING_TYPES.TIMED_HOLD) {
+        return {
+          duration: Number(setRow.querySelector(".timed-duration").value || 0),
+          weight: Number(setRow.querySelector(".timed-weight").value || 0),
+          failure: setRow.querySelector(".timed-failure").checked,
+        };
+      }
+      if (mode === TRACKING_TYPES.CARRY) {
+        return {
+          weight: Number(setRow.querySelector(".carry-weight").value || 0),
+          distance: Number(setRow.querySelector(".carry-distance").value || 0),
+          duration: Number(setRow.querySelector(".carry-duration").value || 0),
+        };
+      }
+      if (mode === TRACKING_TYPES.MOBILITY) {
+        return {
+          duration: Number(setRow.querySelector(".mobility-duration").value || 0),
+          notes: setRow.querySelector(".mobility-notes").value.trim(),
         };
       }
 
@@ -657,11 +796,14 @@ function validatePayload(payload) {
     return "Each exercise needs a muscle/type and mode.";
   }
   if (payload.exercises.some((exercise) => !exercise.sets.length)) return "Each exercise needs at least one set.";
-  if (payload.exercises.some((exercise) => exercise.mode !== "cardio" && exercise.sets.some((set) => !set.reps))) {
-    return "Each strength/bodyweight set needs reps.";
+  if (payload.exercises.some((exercise) => [TRACKING_TYPES.WEIGHTED_REPS, TRACKING_TYPES.BODYWEIGHT_REPS].includes(exercise.mode) && exercise.sets.some((set) => !set.reps))) {
+    return "Each reps-based set needs reps.";
   }
-  if (payload.exercises.some((exercise) => exercise.mode === "cardio" && exercise.sets.some((set) => !set.duration))) {
-    return "Each cardio set needs duration.";
+  if (payload.exercises.some((exercise) => [TRACKING_TYPES.CARDIO, TRACKING_TYPES.TIMED_HOLD].includes(exercise.mode) && exercise.sets.some((set) => !set.duration))) {
+    return "Each cardio or timed hold set needs duration.";
+  }
+  if (payload.exercises.some((exercise) => exercise.mode === TRACKING_TYPES.CARRY && exercise.sets.some((set) => !set.distance && !set.duration))) {
+    return "Each carry set needs distance or duration.";
   }
   return "";
 }
@@ -794,8 +936,10 @@ function renderProgress() {
     const card = document.createElement("article");
     card.className = "progress-card";
     const bestSet = getBestSet(exercise);
-    const failureCount = exercise.mode === "cardio" ? 0 : exercise.sets.filter((set) => set.failure).length;
+    const canTrackFailure = [TRACKING_TYPES.WEIGHTED_REPS, TRACKING_TYPES.BODYWEIGHT_REPS, TRACKING_TYPES.TIMED_HOLD].includes(exercise.mode);
+    const failureCount = canTrackFailure ? exercise.sets.filter((set) => set.failure).length : 0;
     const compactSets = summarizeExercise(exercise);
+    const bestLabel = bestSet ? describeRepsSet(bestSet, exercise) : getNonRepsBestLabel(exercise);
 
     card.innerHTML = `
       <div>
@@ -803,14 +947,34 @@ function renderProgress() {
         <h3>${escapeHtml(session.workoutName)}</h3>
       </div>
       <div class="progress-grid">
-        <div><small>Best</small><strong>${escapeHtml(bestSet ? describeStrengthSet(bestSet, exercise) : "Cardio")}</strong></div>
+        <div><small>Best</small><strong>${escapeHtml(bestLabel)}</strong></div>
         <div><small>Sets</small><strong>${escapeHtml(compactSets)}</strong></div>
-        <div><small>Volume</small><strong>${exercise.mode === "cardio" ? "-" : `${formatNumber(getExerciseVolume(exercise))} kg`}</strong></div>
-        <div><small>Failure</small><strong>${exercise.mode === "cardio" ? "-" : failureCount}</strong></div>
+        <div><small>Volume</small><strong>${getExerciseVolume(exercise) ? `${formatNumber(getExerciseVolume(exercise))} kg` : "-"}</strong></div>
+        <div><small>Failure</small><strong>${canTrackFailure ? failureCount : "-"}</strong></div>
       </div>
     `;
     progressList.append(card);
   });
+}
+
+function getNonRepsBestLabel(exercise) {
+  if (exercise.mode === TRACKING_TYPES.TIMED_HOLD) {
+    const best = [...exercise.sets].sort((a, b) => Number(b.duration) - Number(a.duration))[0];
+    return best ? describeTimedSet(best) : "Timed hold";
+  }
+  if (exercise.mode === TRACKING_TYPES.CARDIO) {
+    const best = [...exercise.sets].sort((a, b) => Number(b.duration) - Number(a.duration))[0];
+    return best ? describeCardioSet(best) : "Cardio";
+  }
+  if (exercise.mode === TRACKING_TYPES.CARRY) {
+    const best = [...exercise.sets].sort((a, b) => Number(b.distance) - Number(a.distance))[0];
+    return best ? describeCarrySet(best) : "Carry";
+  }
+  if (exercise.mode === TRACKING_TYPES.MOBILITY) {
+    const best = [...exercise.sets].sort((a, b) => Number(b.duration) - Number(a.duration))[0];
+    return best ? describeMobilitySet(best) : "Mobility";
+  }
+  return modeLabel(exercise.mode);
 }
 
 function renderHistory() {
@@ -843,10 +1007,10 @@ function showSessionDetail(dateValue) {
       .map((exercise) => {
         const rows = exercise.sets
           .map((set, index) => {
-            if (exercise.mode === "cardio") {
+            if (exercise.mode === TRACKING_TYPES.CARDIO) {
               return `<li><span>Set ${index + 1}</span><strong>${escapeHtml(describeCardioSet(set))}</strong></li>`;
             }
-            return `<li><span>Set ${index + 1}</span><strong>${escapeHtml(describeStrengthSet(set, exercise))}${set.failure ? " - failure" : ""}</strong></li>`;
+            return `<li><span>Set ${index + 1}</span><strong>${escapeHtml(describeSet(set, exercise))}</strong></li>`;
           })
           .join("");
         return `
@@ -882,6 +1046,14 @@ function showSessionDetail(dateValue) {
   detailNotes.hidden = true;
   sessionDetail.hidden = false;
   document.body.classList.add("has-detail-open");
+}
+
+function describeSet(set, exercise) {
+  if (exercise.mode === TRACKING_TYPES.CARDIO) return describeCardioSet(set);
+  if (exercise.mode === TRACKING_TYPES.TIMED_HOLD) return describeTimedSet(set);
+  if (exercise.mode === TRACKING_TYPES.CARRY) return describeCarrySet(set);
+  if (exercise.mode === TRACKING_TYPES.MOBILITY) return describeMobilitySet(set);
+  return `${describeRepsSet(set, exercise)}${set.failure ? " - failure" : ""}`;
 }
 
 function hideSessionDetail() {

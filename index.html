@@ -201,9 +201,12 @@
             <label>
               Mode
               <select class="exercise-mode" required>
-                <option value="strength">Strength</option>
-                <option value="bodyweight">Bodyweight</option>
+                <option value="weighted-reps">Weighted reps</option>
+                <option value="bodyweight-reps">Bodyweight reps</option>
+                <option value="timed-hold">Timed hold</option>
                 <option value="cardio">Cardio</option>
+                <option value="carry">Carry / distance</option>
+                <option value="mobility">Mobility</option>
               </select>
             </label>
           </div>
@@ -226,9 +229,12 @@
               <label>
                 Mode
                 <select class="custom-mode">
-                  <option value="strength">Strength</option>
-                  <option value="bodyweight">Bodyweight</option>
+                  <option value="weighted-reps">Weighted reps</option>
+                  <option value="bodyweight-reps">Bodyweight reps</option>
+                  <option value="timed-hold">Timed hold</option>
                   <option value="cardio">Cardio</option>
+                  <option value="carry">Carry / distance</option>
+                  <option value="mobility">Mobility</option>
                 </select>
               </label>
             </div>
@@ -246,8 +252,8 @@
       </article>
     </template>
 
-    <template id="strengthSetTemplate">
-      <div class="set-row strength-set-row">
+    <template id="repsSetTemplate">
+      <div class="set-row reps-set-row">
         <label>
           Reps
           <input class="set-reps" type="number" min="1" max="200" step="1" required />
@@ -258,6 +264,24 @@
         </label>
         <label class="failure-field">
           <input class="set-failure" type="checkbox" />
+          Failure
+        </label>
+        <button class="secondary-action danger remove-set" type="button">Remove set</button>
+      </div>
+    </template>
+
+    <template id="timedSetTemplate">
+      <div class="set-row timed-set-row">
+        <label>
+          Duration
+          <input class="timed-duration" type="number" min="0" max="600" step="0.5" placeholder="sec" required />
+        </label>
+        <label>
+          Added weight
+          <input class="timed-weight" type="number" min="0" max="1000" step="0.5" placeholder="kg" />
+        </label>
+        <label class="failure-field">
+          <input class="timed-failure" type="checkbox" />
           Failure
         </label>
         <button class="secondary-action danger remove-set" type="button">Remove set</button>
@@ -277,6 +301,38 @@
         <label>
           Intensity
           <input class="cardio-intensity" type="text" placeholder="Speed, incline, level" />
+        </label>
+        <button class="secondary-action danger remove-set" type="button">Remove set</button>
+      </div>
+    </template>
+
+    <template id="carrySetTemplate">
+      <div class="set-row carry-set-row">
+        <label>
+          Weight
+          <input class="carry-weight" type="number" min="0" max="1000" step="0.5" placeholder="kg" />
+        </label>
+        <label>
+          Distance
+          <input class="carry-distance" type="number" min="0" max="1000" step="0.01" placeholder="m" />
+        </label>
+        <label>
+          Duration
+          <input class="carry-duration" type="number" min="0" max="600" step="0.5" placeholder="sec" />
+        </label>
+        <button class="secondary-action danger remove-set" type="button">Remove set</button>
+      </div>
+    </template>
+
+    <template id="mobilitySetTemplate">
+      <div class="set-row mobility-set-row">
+        <label>
+          Duration
+          <input class="mobility-duration" type="number" min="0" max="600" step="0.5" placeholder="min" />
+        </label>
+        <label>
+          Notes
+          <input class="mobility-notes" type="text" placeholder="Side, stretch, drill notes" />
         </label>
         <button class="secondary-action danger remove-set" type="button">Remove set</button>
       </div>

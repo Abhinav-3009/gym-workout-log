@@ -430,12 +430,18 @@ textarea:focus {
   padding: 8px;
 }
 
-.strength-set-row {
+.reps-set-row,
+.timed-set-row {
   grid-template-columns: minmax(76px, 0.9fr) minmax(94px, 1fr) minmax(88px, auto) auto;
 }
 
-.cardio-set-row {
+.cardio-set-row,
+.carry-set-row {
   grid-template-columns: minmax(100px, 0.8fr) minmax(100px, 0.8fr) minmax(160px, 1fr) auto;
+}
+
+.mobility-set-row {
+  grid-template-columns: minmax(100px, 0.45fr) minmax(180px, 1fr) auto;
 }
 
 .failure-field {
@@ -801,15 +807,22 @@ textarea:focus {
     padding: 14px;
   }
 
-  .strength-set-row,
-  .cardio-set-row {
+  .reps-set-row,
+  .timed-set-row,
+  .cardio-set-row,
+  .carry-set-row,
+  .mobility-set-row {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
   .failure-field,
   .remove-set,
   .cardio-set-row label:nth-child(3),
-  .cardio-set-row .remove-set {
+  .cardio-set-row .remove-set,
+  .carry-set-row label:nth-child(3),
+  .carry-set-row .remove-set,
+  .mobility-set-row label:nth-child(2),
+  .mobility-set-row .remove-set {
     grid-column: 1 / -1;
   }
 
