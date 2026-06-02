@@ -926,15 +926,14 @@ function renderProgress() {
 
   const latest = rows[0].exercise;
   const mode = latest.mode;
-  progressSummary.replaceChildren(
-    createMetric(`${rows.length} sessions`),
-    createMetric(modeLabel(mode)),
-    createMetric(latest.muscleGroup),
-  );
+  const analysis = getProgressAnalysis(rows);
+  progressSummary.innerHTML = renderProgressSummary(analysis, latest, rows.length);
+  progressList.insertAdjacentHTML("beforeend", renderProgressCharts(analysis));
 
   rows.forEach(({ session, exercise }) => {
-    const card = document.createElement("article");
+    const card = document.createElement("details");
     card.className = "progress-card";
+    const point = getProgressPoint(exercise);
     const bestSet = getBestSet(exercise);
     const canTrackFailure = [TRACKING_TYPES.WEIGHTED_REPS, TRACKING_TYPES.BODYWEIGHT_REPS, TRACKING_TYPES.TIMED_HOLD].includes(exercise.mode);
     const failureCount = canTrackFailure ? exercise.sets.filter((set) => set.failure).length : 0;
@@ -942,10 +941,13 @@ function renderProgress() {
     const bestLabel = bestSet ? describeRepsSet(bestSet, exercise) : getNonRepsBestLabel(exercise);
 
     card.innerHTML = `
-      <div>
-        <p class="log-date">${escapeHtml(toDisplayDate(session.date))}</p>
-        <h3>${escapeHtml(session.workoutName)}</h3>
-      </div>
+      <summary>
+        <span>
+          <small>${escapeHtml(toDisplayDate(session.date))}</small>
+          <strong>${escapeHtml(session.workoutName)}</strong>
+        </span>
+        <span class="progress-main-value">${escapeHtml(point.display)}</span>
+      </summary>
       <div class="progress-grid">
         <div><small>Best</small><strong>${escapeHtml(bestLabel)}</strong></div>
         <div><small>Sets</small><strong>${escapeHtml(compactSets)}</strong></div>
@@ -955,6 +957,206 @@ function renderProgress() {
     `;
     progressList.append(card);
   });
+}
+
+function getProgressAnalysis(rows) {
+  const ascending = [...rows].sort((a, b) => a.session.date.localeCompare(b.session.date));
+  const points = ascending.map(({ session, exercise }) => ({
+    date: session.date,
+    label: toDisplayDate(session.date),
+    ...getProgressPoint(exercise),
+    secondary: getSecondaryProgressPoint(exercise),
+  }));
+  const latest = points.at(-1);
+  const previous = points.at(-2);
+  const best = [...points].sort((a, b) => b.value - a.value)[0];
+  const change = latest && previous ? latest.value - previous.value : 0;
+  return {
+    points,
+    latest,
+    previous,
+    best,
+    change,
+    primaryLabel: latest?.metricLabel || "Progress",
+    primaryUnit: latest?.unit || "",
+    secondaryLabel: latest?.secondary?.metricLabel || "",
+    secondaryUnit: latest?.secondary?.unit || "",
+    secondaryPoints: points
+      .filter((point) => point.secondary)
+      .map((point) => ({
+        date: point.date,
+        label: point.label,
+        value: point.secondary.value,
+        display: point.secondary.display,
+      })),
+  };
+}
+
+function getProgressPoint(exercise) {
+  if ([TRACKING_TYPES.WEIGHTED_REPS, TRACKING_TYPES.BODYWEIGHT_REPS].includes(exercise.mode)) {
+    const best = getBestSet(exercise) || { weight: 0, reps: 0 };
+    return {
+      metricLabel: exercise.mode === TRACKING_TYPES.BODYWEIGHT_REPS ? "Added weight" : "Best weight",
+      unit: "kg",
+      value: Number(best.weight) || 0,
+      display: describeRepsSet(best, exercise),
+    };
+  }
+  if (exercise.mode === TRACKING_TYPES.TIMED_HOLD) {
+    const best = [...exercise.sets].sort((a, b) => Number(b.duration) - Number(a.duration))[0] || {};
+    return {
+      metricLabel: "Best hold",
+      unit: "sec",
+      value: Number(best.duration) || 0,
+      display: describeTimedSet(best),
+    };
+  }
+  if (exercise.mode === TRACKING_TYPES.CARDIO) {
+    const totalDistance = exercise.sets.reduce((sum, set) => sum + Number(set.distance || 0), 0);
+    const totalDuration = exercise.sets.reduce((sum, set) => sum + Number(set.duration || 0), 0);
+    return {
+      metricLabel: totalDistance ? "Distance" : "Duration",
+      unit: totalDistance ? "km" : "min",
+      value: totalDistance || totalDuration,
+      display: totalDistance ? `${formatNumber(totalDistance)} km` : `${formatNumber(totalDuration)} min`,
+    };
+  }
+  if (exercise.mode === TRACKING_TYPES.CARRY) {
+    const best = [...exercise.sets].sort((a, b) => Number(b.distance) - Number(a.distance))[0] || {};
+    return {
+      metricLabel: "Distance",
+      unit: "m",
+      value: Number(best.distance) || 0,
+      display: describeCarrySet(best),
+    };
+  }
+  if (exercise.mode === TRACKING_TYPES.MOBILITY) {
+    const totalDuration = exercise.sets.reduce((sum, set) => sum + Number(set.duration || 0), 0);
+    return {
+      metricLabel: "Duration",
+      unit: "min",
+      value: totalDuration,
+      display: `${formatNumber(totalDuration)} min`,
+    };
+  }
+  return { metricLabel: "Progress", unit: "", value: 0, display: "-" };
+}
+
+function getSecondaryProgressPoint(exercise) {
+  if ([TRACKING_TYPES.WEIGHTED_REPS, TRACKING_TYPES.BODYWEIGHT_REPS].includes(exercise.mode)) {
+    const bestReps = Math.max(...exercise.sets.map((set) => Number(set.reps) || 0));
+    return {
+      metricLabel: "Best reps",
+      unit: "reps",
+      value: bestReps,
+      display: `${bestReps} reps`,
+    };
+  }
+  if (exercise.mode === TRACKING_TYPES.TIMED_HOLD) {
+    const totalDuration = exercise.sets.reduce((sum, set) => sum + Number(set.duration || 0), 0);
+    return {
+      metricLabel: "Total hold",
+      unit: "sec",
+      value: totalDuration,
+      display: `${formatNumber(totalDuration)} sec`,
+    };
+  }
+  if (exercise.mode === TRACKING_TYPES.CARDIO) {
+    const totalDuration = exercise.sets.reduce((sum, set) => sum + Number(set.duration || 0), 0);
+    return {
+      metricLabel: "Duration",
+      unit: "min",
+      value: totalDuration,
+      display: `${formatNumber(totalDuration)} min`,
+    };
+  }
+  if (exercise.mode === TRACKING_TYPES.CARRY) {
+    const bestWeight = Math.max(...exercise.sets.map((set) => Number(set.weight) || 0));
+    return {
+      metricLabel: "Weight",
+      unit: "kg",
+      value: bestWeight,
+      display: `${formatNumber(bestWeight)} kg`,
+    };
+  }
+  return null;
+}
+
+function renderProgressSummary(analysis, exercise, sessionCount) {
+  const changeLabel = getChangeLabel(analysis.change, analysis.primaryUnit);
+  return `
+    <article class="analysis-card is-featured">
+      <small>Latest</small>
+      <strong>${escapeHtml(analysis.latest?.display || "-")}</strong>
+      <span>${escapeHtml(analysis.primaryLabel)}</span>
+    </article>
+    <article class="analysis-card">
+      <small>Personal best</small>
+      <strong>${escapeHtml(analysis.best?.display || "-")}</strong>
+      <span>${escapeHtml(analysis.best?.label || "")}</span>
+    </article>
+    <article class="analysis-card">
+      <small>Since previous</small>
+      <strong class="${analysis.change > 0 ? "is-positive" : analysis.change < 0 ? "is-negative" : ""}">${escapeHtml(changeLabel)}</strong>
+      <span>${analysis.previous ? escapeHtml(analysis.previous.label) : "Need 2 sessions"}</span>
+    </article>
+    <article class="analysis-card">
+      <small>History</small>
+      <strong>${sessionCount}</strong>
+      <span>${escapeHtml(modeLabel(exercise.mode))} - ${escapeHtml(exercise.muscleGroup)}</span>
+    </article>
+  `;
+}
+
+function getChangeLabel(change, unit) {
+  if (!change) return "No change";
+  const prefix = change > 0 ? "+" : "";
+  return `${prefix}${formatNumber(change)}${unit ? ` ${unit}` : ""}`;
+}
+
+function renderProgressCharts(analysis) {
+  const charts = [
+    renderLineChart(analysis.primaryLabel, analysis.points, analysis.primaryUnit),
+  ];
+  if (analysis.secondaryPoints.length && analysis.secondaryPoints.some((point) => point.value > 0)) {
+    charts.push(renderLineChart(analysis.secondaryLabel, analysis.secondaryPoints, analysis.secondaryUnit));
+  }
+  return `<section class="chart-grid">${charts.join("")}</section>`;
+}
+
+function renderLineChart(title, points, unit) {
+  const chartPoints = points.filter((point) => Number.isFinite(point.value));
+  const width = 320;
+  const height = 150;
+  const pad = 20;
+  const values = chartPoints.map((point) => point.value);
+  const min = Math.min(...values, 0);
+  const max = Math.max(...values, 1);
+  const range = max - min || 1;
+  const coords = chartPoints.map((point, index) => {
+    const x = chartPoints.length === 1 ? width / 2 : pad + (index * (width - pad * 2)) / (chartPoints.length - 1);
+    const y = height - pad - ((point.value - min) / range) * (height - pad * 2);
+    return { ...point, x, y };
+  });
+  const polyline = coords.map((point) => `${point.x},${point.y}`).join(" ");
+  const latest = coords.at(-1);
+
+  return `
+    <article class="chart-card">
+      <div class="chart-heading">
+        <div>
+          <small>${escapeHtml(title)}</small>
+          <strong>${escapeHtml(latest ? `${formatNumber(latest.value)}${unit ? ` ${unit}` : ""}` : "-")}</strong>
+        </div>
+        <span>${chartPoints.length} points</span>
+      </div>
+      <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(title)} chart">
+        <line x1="${pad}" y1="${height - pad}" x2="${width - pad}" y2="${height - pad}" class="chart-axis"></line>
+        <polyline points="${polyline}" class="chart-line"></polyline>
+        ${coords.map((point) => `<circle cx="${point.x}" cy="${point.y}" r="4" class="chart-dot"><title>${escapeHtml(`${point.label}: ${point.display}`)}</title></circle>`).join("")}
+      </svg>
+    </article>
+  `;
 }
 
 function getNonRepsBestLabel(exercise) {

@@ -11,7 +11,7 @@ Offline-first gym workout log for phone use. The app stores data locally on the 
 - Keep logs separate per selected user.
 - Review saved sessions in a Monday-first calendar with highlighted workout days.
 - Open a full-screen workout detail view for a selected date.
-- Track exercise progress with one summarized row per session.
+- Track exercise progress with summary cards, simple charts, and expandable session rows.
 
 ## Run Locally
 
