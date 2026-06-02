@@ -41,7 +41,16 @@ export function normalizeSet(set, mode) {
     weight: Number(set.weight) || 0,
     failure: Boolean(set.failure),
     dropSet: Boolean(set.dropSet),
+    dropSets: normalizeDropSets(set.dropSets || []),
   };
+}
+
+export function normalizeDropSets(dropSets) {
+  if (!Array.isArray(dropSets)) return [];
+  return dropSets.map((dropSet) => ({
+    reps: Number(dropSet.reps) || 1,
+    weight: Number(dropSet.weight) || 0,
+  }));
 }
 
 export function normalizeSets(sets, mode) {
@@ -49,7 +58,12 @@ export function normalizeSets(sets, mode) {
 }
 
 export function getSetVolume(set) {
-  return Number(set.reps || 0) * Number(set.weight || 0);
+  const mainVolume = Number(set.reps || 0) * Number(set.weight || 0);
+  const dropVolume = (set.dropSets || []).reduce(
+    (sum, dropSet) => sum + Number(dropSet.reps || 0) * Number(dropSet.weight || 0),
+    0,
+  );
+  return mainVolume + dropVolume;
 }
 
 export function getExerciseVolume(exercise) {
@@ -77,7 +91,15 @@ export function getFailureSetCount(session) {
 export function describeRepsSet(set, exercise) {
   const label = exercise.mode === TRACKING_TYPES.BODYWEIGHT_REPS ? "kg added" : "kg";
   const parts = [`${formatNumber(set.weight || 0)}${label === "kg" ? "kg" : "kg added"} x ${set.reps}`];
-  if (set.dropSet) parts.push("drop");
+  if (set.dropSets?.length) {
+    parts.push(
+      `drop ${set.dropSets
+        .map((dropSet) => `${formatNumber(dropSet.weight || 0)}${label === "kg" ? "kg" : "kg added"} x ${dropSet.reps}`)
+        .join(" -> ")}`,
+    );
+  } else if (set.dropSet) {
+    parts.push("drop");
+  }
   return parts.join(" / ");
 }
 

@@ -471,11 +471,33 @@ function addSet(card, data = {}) {
     node.querySelector(".set-reps").value = data.reps ?? 10;
     node.querySelector(".set-weight").value = data.weight ?? 0;
     node.querySelector(".set-failure").checked = Boolean(data.failure);
-    node.querySelector(".set-drop").checked = Boolean(data.dropSet);
+    (data.dropSets || []).forEach((dropSet) => addDropSetRow(node, dropSet));
+    if (data.dropSet && !(data.dropSets || []).length) {
+      node.dataset.legacyDropSet = "true";
+    }
   }
   card.querySelector(".set-list").append(node);
   updateSetRemoveButtons(card);
   updateExerciseSummary(card);
+}
+
+function addDropSetRow(setRow, data = {}) {
+  const dropRow = document.createElement("div");
+  dropRow.className = "drop-set-row";
+  dropRow.innerHTML = `
+    <label>
+      Drop reps
+      <input class="drop-reps" type="number" min="1" max="200" step="1" required />
+    </label>
+    <label>
+      Drop weight
+      <input class="drop-weight" type="number" min="0" max="1000" step="0.5" placeholder="kg" />
+    </label>
+    <button class="secondary-action danger remove-drop-set" type="button">Remove drop</button>
+  `;
+  dropRow.querySelector(".drop-reps").value = data.reps ?? 8;
+  dropRow.querySelector(".drop-weight").value = data.weight ?? "";
+  setRow.querySelector(".drop-set-list").append(dropRow);
 }
 
 function getSetTemplate(mode) {
@@ -514,7 +536,7 @@ function getDefaultSet(mode) {
   if (normalizedMode === TRACKING_TYPES.TIMED_HOLD) return { duration: "", weight: 0, failure: false };
   if (normalizedMode === TRACKING_TYPES.CARRY) return { weight: "", distance: "", duration: "" };
   if (normalizedMode === TRACKING_TYPES.MOBILITY) return { duration: "", notes: "" };
-  return { reps: 10, weight: 0, failure: false, dropSet: false };
+  return { reps: 10, weight: 0, failure: false, dropSets: [] };
 }
 
 function addExercise(data = {}, options = {}) {
@@ -602,7 +624,11 @@ function getExerciseDataFromCard(card) {
         reps: Number(setRow.querySelector(".set-reps").value),
         weight: Number(setRow.querySelector(".set-weight").value || 0),
         failure: setRow.querySelector(".set-failure").checked,
-        dropSet: setRow.querySelector(".set-drop").checked,
+        dropSet: setRow.dataset.legacyDropSet === "true" && !setRow.querySelector(".drop-set-row"),
+        dropSets: [...setRow.querySelectorAll(".drop-set-row")].map((dropRow) => ({
+          reps: Number(dropRow.querySelector(".drop-reps").value),
+          weight: Number(dropRow.querySelector(".drop-weight").value || 0),
+        })),
       };
     }),
   };
@@ -630,6 +656,9 @@ function validatePayload(payload) {
   if (payload.exercises.some((exercise) => !exercise.sets.length)) return "Each exercise needs at least one set.";
   if (payload.exercises.some((exercise) => [TRACKING_TYPES.WEIGHTED_REPS, TRACKING_TYPES.BODYWEIGHT_REPS].includes(exercise.mode) && exercise.sets.some((set) => !set.reps))) {
     return "Each reps-based set needs reps.";
+  }
+  if (payload.exercises.some((exercise) => [TRACKING_TYPES.WEIGHTED_REPS, TRACKING_TYPES.BODYWEIGHT_REPS].includes(exercise.mode) && exercise.sets.some((set) => set.dropSets?.some((dropSet) => !dropSet.reps)))) {
+    return "Each drop set needs reps.";
   }
   if (payload.exercises.some((exercise) => [TRACKING_TYPES.CARDIO, TRACKING_TYPES.TIMED_HOLD].includes(exercise.mode) && exercise.sets.some((set) => !set.duration))) {
     return "Each cardio or timed hold set needs duration.";
@@ -1396,8 +1425,20 @@ exerciseList.addEventListener("click", (event) => {
     return;
   }
 
+  if (button.classList.contains("add-drop-set")) {
+    addDropSetRow(button.closest(".set-row"));
+    updateExerciseSummary(card);
+    return;
+  }
+
   if (button.classList.contains("collapse-exercise")) {
     setExerciseExpanded(card, false);
+    return;
+  }
+
+  if (button.classList.contains("remove-drop-set")) {
+    button.closest(".drop-set-row").remove();
+    updateExerciseSummary(card);
     return;
   }
 

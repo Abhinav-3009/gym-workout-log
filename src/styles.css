@@ -458,7 +458,7 @@ textarea:focus {
 }
 
 .reps-set-row {
-  grid-template-columns: minmax(70px, 0.8fr) minmax(90px, 1fr) minmax(72px, auto) minmax(64px, auto) auto;
+  grid-template-columns: minmax(76px, 0.9fr) minmax(94px, 1fr) minmax(88px, auto) auto;
 }
 
 .cardio-set-row,
@@ -482,6 +482,31 @@ textarea:focus {
   width: 18px;
   min-height: 18px;
   accent-color: var(--accent);
+}
+
+.drop-set-area {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 8px;
+}
+
+.drop-set-list {
+  display: grid;
+  gap: 8px;
+}
+
+.drop-set-row {
+  display: grid;
+  grid-template-columns: minmax(76px, 0.9fr) minmax(94px, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+
+.add-drop-set {
+  justify-self: start;
+  min-height: 36px;
 }
 
 .exercise-actions {
@@ -1058,6 +1083,7 @@ textarea:focus {
 
   .failure-field,
   .remove-set,
+  .drop-set-area,
   .cardio-set-row label:nth-child(3),
   .cardio-set-row .remove-set,
   .carry-set-row label:nth-child(3),
@@ -1098,6 +1124,18 @@ textarea:focus {
 
   .reps-set-row .failure-field {
     grid-column: auto;
+  }
+
+  .reps-set-row > .remove-set {
+    grid-column: auto;
+  }
+
+  .drop-set-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .drop-set-row .remove-drop-set {
+    grid-column: 1 / -1;
   }
 
   .user-form,
