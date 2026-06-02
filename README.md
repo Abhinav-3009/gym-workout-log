@@ -1,47 +1,248 @@
 # Gym Workout Log
 
-Offline-first gym workout log for phone use. The app stores data locally on the device and supports multiple simple users through the collapsible selector at the top.
+Gym Workout Log is an offline-first workout tracking app designed for quick phone use in the gym. It runs as a static Progressive Web App, so it can be hosted on GitHub Pages and installed on Android from Chrome without a backend.
 
-## Features
+The app is currently built for simple personal use: choose a user, log a workout, review sessions by date, and track exercise progress over time.
 
-- Log daily workout sessions with multiple exercises and sets.
-- Track exercises with purpose-built tracking types: weighted reps, bodyweight reps, timed holds, cardio, carries, and mobility.
-- Track reps, weight or added weight, failure sets, hold duration, cardio distance, carry distance, intensity, notes, and muscle/type.
-- Use the built-in exercise library or add custom exercises for the selected user.
-- Keep logs separate per selected user.
-- Review saved sessions in a Monday-first calendar with highlighted workout days.
-- Open a full-screen workout detail view for a selected date.
-- Track exercise progress with summary cards, simple charts, and expandable session rows.
-- Export and import JSON backups from the user panel.
+## Current Features
+
+- Multi-user support through a simple dropdown.
+- Add/delete simple local users.
+- Log daily workouts with multiple exercises and sets.
+- Built-in exercise library grouped by muscle/type.
+- Add custom exercises for the selected user.
+- Tracking types:
+  - Weighted reps
+  - Bodyweight reps
+  - Timed holds
+  - Cardio
+  - Carry / distance
+  - Mobility
+- Failure set checkbox where relevant.
+- Notes per workout.
+- Monday-first calendar for workout history.
+- Full-screen Training Journal detail view for selected dates.
+- Progress view with:
+  - summary cards
+  - simple charts
+  - expandable session rows
+  - PR badges
+- Dark performance theme.
+- Offline support through a service worker.
+- JSON export/import backup from the collapsible user panel.
+
+## How The App Works Today
+
+This app is fully static:
+
+- No backend.
+- No login.
+- No cloud sync.
+- No database server.
+- No package manager or build step.
+
+Data is stored in the browser/PWA local storage on the device where the app is used.
+
+This means:
+
+- Closing the tab or app does not delete data.
+- Restarting Chrome or the phone does not normally delete data.
+- Clearing Chrome site data can delete data.
+- Opening the same hosted URL on another phone starts with separate empty data.
+- Use `Export backup` regularly if the data matters.
+
+## Install On Android
+
+Android Chrome can install this app as a PWA only from a secure origin, so use an HTTPS static host.
+
+Recommended path:
+
+1. Deploy this repository to GitHub Pages.
+2. Open the GitHub Pages HTTPS URL in Chrome on Android.
+3. Open Chrome menu.
+4. Tap `Add to Home screen` or `Install app`.
+5. Open it from the Android home screen.
+
+After the first load, the app should work offline.
+
+## Deploy With GitHub Pages
+
+This repo includes a GitHub Actions workflow:
+
+```text
+.github/workflows/pages.yml
+```
+
+To deploy:
+
+```sh
+git push
+```
+
+The workflow runs on pushes to `main` and publishes the static app to GitHub Pages.
+
+If Pages is not enabled yet:
+
+1. Open the repository on GitHub.
+2. Go to `Settings`.
+3. Go to `Pages`.
+4. Select `GitHub Actions` as the source.
+5. Re-run the workflow if needed.
 
 ## Run Locally
+
+From the project folder:
 
 ```sh
 python3 -m http.server 5173
 ```
 
-Open `http://localhost:5173` on the Mac.
+Open:
 
-## Install On Android
+```text
+http://localhost:5173
+```
 
-Android Chrome can install this as a PWA only from a secure origin. The practical path is:
+Service workers require HTTP/HTTPS, so avoid opening `index.html` directly from the filesystem for PWA testing.
 
-1. Deploy this folder to an HTTPS static host such as GitHub Pages, Netlify, or Cloudflare Pages.
-2. Open the deployed HTTPS URL in Chrome on Android.
-3. Use Chrome menu > Add to Home screen.
+## Data And Backup
 
-After the first load, the app works offline. Logs remain local to the phone/browser storage.
+Current storage keys:
 
-## Data
+- Current data: `gym-workout-log:v2`
+- Legacy data: `gym-workout-log:v1`
 
-- Default users: `Abhinav`, `Ankur`
-- Storage key: `gym-workout-log:v2`
-- Legacy data from `gym-workout-log:v1` is migrated into `Abhinav` on first launch.
-- Backup files contain the same local app data and can be imported to replace current device data.
+Legacy `v1` logs are migrated into the default user `Abhinav` on first launch.
 
-## Code Shape
+Backup behavior:
 
-- `src/app.js` handles DOM wiring and app flow.
-- `src/constants.js` contains storage keys, muscle groups, tracking types, and built-in exercises.
-- `src/utils.js` contains date, formatting, escaping, and ID helpers.
-- `src/workout.js` contains tracking-type normalization, workout calculations, and display helpers.
+- `Export backup` downloads the full local app state as JSON.
+- `Import backup` replaces current local data after confirmation.
+- Import does not merge data yet.
+- Backup files contain personal workout data, so treat them as private.
+
+## Project Structure
+
+```text
+.
+├── index.html
+├── manifest.webmanifest
+├── service-worker.js
+├── assets/
+│   ├── icon.svg
+│   ├── icon-192.png
+│   └── icon-512.png
+├── src/
+│   ├── app.js
+│   ├── constants.js
+│   ├── utils.js
+│   ├── workout.js
+│   └── styles.css
+├── AI_CONTEXT.md
+└── .github/workflows/pages.yml
+```
+
+Code roles:
+
+- `src/app.js`: DOM wiring, rendering, state mutation, app flow.
+- `src/constants.js`: storage keys, built-in exercises, muscle groups, tracking types.
+- `src/utils.js`: date, ID, formatting, and escaping helpers.
+- `src/workout.js`: workout calculations, tracking type normalization, set summaries.
+- `src/styles.css`: visual design and responsive layout.
+- `AI_CONTEXT.md`: handoff notes for future AI/chat sessions.
+
+## Contributing
+
+Contributions are welcome, especially around usability, data safety, and mobile ergonomics.
+
+Suggested workflow:
+
+1. Fork or clone the repository.
+2. Create a feature branch:
+
+```sh
+git checkout -b feature/my-change
+```
+
+3. Run locally:
+
+```sh
+python3 -m http.server 5173
+```
+
+4. Make your changes.
+5. Run checks:
+
+```sh
+node --check src/app.js
+node --check src/constants.js
+node --check src/utils.js
+node --check src/workout.js
+node --check service-worker.js
+python3 -m json.tool manifest.webmanifest >/dev/null
+```
+
+6. Smoke test in browser.
+7. Commit with a clear message.
+8. Open a pull request.
+
+Important contribution notes:
+
+- Keep the app dependency-free unless there is a strong reason.
+- Keep it mobile-first.
+- Preserve offline behavior.
+- Bump `CACHE_NAME` in `service-worker.js` when app files change.
+- Do not introduce cloud sync or auth without a clear design discussion.
+
+## Future Plan
+
+The app can stay as a PWA for a long time, but the long-term direction is to make it strong enough to package as a Play Store app.
+
+Planned improvements:
+
+- Better backup flow:
+  - import preview
+  - merge import
+  - backup reminders
+- Exercise library management:
+  - edit custom exercises
+  - delete custom exercises
+  - fix accidental duplicates
+- Faster logging:
+  - repeat previous workout
+  - copy previous set
+  - duplicate set
+- Better progress insights:
+  - clearer PR history
+  - plain-English trend summaries
+  - better comparison for same weight over time
+- More app structure:
+  - split `app.js` further into view-specific modules
+  - add state-specific module
+  - add lightweight tests for data migration/calculations
+- Optional Play Store packaging:
+  - Capacitor wrapper, or
+  - Trusted Web Activity / Bubblewrap
+
+Before Play Store upload, the app should have:
+
+- Reliable backup/export/import.
+- Clear privacy/data explanation.
+- Better error handling.
+- App icons/screenshots.
+- A stable versioning/release process.
+
+## Privacy
+
+Workout data stays on the device/browser where the app is used. The current app does not send workout data to any server.
+
+If hosted on GitHub Pages or another static host, that host serves the app files only. It does not receive or store the workout logs.
+
+## Current Limitations
+
+- No cloud sync.
+- No account login.
+- Import replaces data instead of merging.
+- Custom exercises can be added but not managed through a dedicated library screen yet.
+- No Play Store package yet.
+
