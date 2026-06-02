@@ -448,9 +448,25 @@ function updateSetRemoveButtons(card) {
   });
 }
 
+function ensureSetSummaryButton(setRow) {
+  let button = setRow.querySelector(".set-summary-button");
+  if (button) return button;
+
+  button = document.createElement("button");
+  button.className = "set-summary-button";
+  button.type = "button";
+  setRow.prepend(button);
+  return button;
+}
+
 function setSetExpanded(setRow, expanded) {
+  const summaryButton = ensureSetSummaryButton(setRow);
   setRow.classList.toggle("is-collapsed", !expanded);
-  setRow.querySelector(".set-summary-button").setAttribute("aria-expanded", String(expanded));
+  summaryButton.hidden = expanded;
+  summaryButton.setAttribute("aria-expanded", String(expanded));
+  [...setRow.children].forEach((child) => {
+    if (child !== summaryButton) child.hidden = !expanded;
+  });
 }
 
 function collapseSetRows(card) {
@@ -461,7 +477,7 @@ function updateSetSummaries(card) {
   const mode = normalizeMode(card.dataset.mode || card.querySelector(".exercise-mode").value);
   card.querySelectorAll(".set-row").forEach((setRow, index) => {
     const set = getSetDataFromRow(setRow, mode);
-    setRow.querySelector(".set-summary-button").textContent = `Set ${index + 1}: ${describeSet(set, { mode })}`;
+    ensureSetSummaryButton(setRow).textContent = `Set ${index + 1}: ${describeSet(set, { mode })}`;
   });
 }
 
@@ -495,6 +511,7 @@ function addSet(card, data = {}) {
     }
   }
   card.querySelector(".set-list").append(node);
+  setSetExpanded(node, true);
   updateSetRemoveButtons(card);
   updateSetSummaries(card);
   updateExerciseSummary(card);
