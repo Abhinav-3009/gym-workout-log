@@ -12,6 +12,7 @@ Offline-first gym workout log for phone use. The app stores data locally on the 
 - Review saved sessions in a Monday-first calendar with highlighted workout days.
 - Open a full-screen workout detail view for a selected date.
 - Track exercise progress with summary cards, simple charts, and expandable session rows.
+- Export and import JSON backups from the user panel.
 
 ## Run Locally
 
@@ -36,3 +37,11 @@ After the first load, the app works offline. Logs remain local to the phone/brow
 - Default users: `Abhinav`, `Ankur`
 - Storage key: `gym-workout-log:v2`
 - Legacy data from `gym-workout-log:v1` is migrated into `Abhinav` on first launch.
+- Backup files contain the same local app data and can be imported to replace current device data.
+
+## Code Shape
+
+- `src/app.js` handles DOM wiring and app flow.
+- `src/constants.js` contains storage keys, muscle groups, tracking types, and built-in exercises.
+- `src/utils.js` contains date, formatting, escaping, and ID helpers.
+- `src/workout.js` contains tracking-type normalization, workout calculations, and display helpers.

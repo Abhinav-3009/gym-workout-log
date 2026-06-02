@@ -1,69 +1,49 @@
-const STORAGE_KEY = "gym-workout-log:v2";
-const LEGACY_STORAGE_KEY = "gym-workout-log:v1";
-const SELECTED_USER_KEY = "gym-workout-log:selected-user";
-const DEFAULT_USERS = ["Abhinav", "Ankur"];
-const MUSCLE_GROUPS = [
-  "Chest",
-  "Back",
-  "Shoulders",
-  "Biceps",
-  "Triceps",
-  "Legs",
-  "Core",
-  "Bodyweight",
-  "Cardio",
-  "Other",
-];
-const TRACKING_TYPES = {
-  WEIGHTED_REPS: "weighted-reps",
-  BODYWEIGHT_REPS: "bodyweight-reps",
-  TIMED_HOLD: "timed-hold",
-  CARDIO: "cardio",
-  CARRY: "carry",
-  MOBILITY: "mobility",
-};
-const BUILT_IN_EXERCISES = [
-  ["bench-press", "Bench press", "Chest", TRACKING_TYPES.WEIGHTED_REPS],
-  ["incline-dumbbell-press", "Incline dumbbell press", "Chest", TRACKING_TYPES.WEIGHTED_REPS],
-  ["chest-fly", "Chest fly", "Chest", TRACKING_TYPES.WEIGHTED_REPS],
-  ["lat-pulldown", "Lat pulldown", "Back", TRACKING_TYPES.WEIGHTED_REPS],
-  ["barbell-row", "Barbell row", "Back", TRACKING_TYPES.WEIGHTED_REPS],
-  ["seated-cable-row", "Seated cable row", "Back", TRACKING_TYPES.WEIGHTED_REPS],
-  ["dead-hang", "Dead hang", "Back", TRACKING_TYPES.TIMED_HOLD],
-  ["overhead-press", "Overhead press", "Shoulders", TRACKING_TYPES.WEIGHTED_REPS],
-  ["lateral-raise", "Lateral raise", "Shoulders", TRACKING_TYPES.WEIGHTED_REPS],
-  ["rear-delt-fly", "Rear delt fly", "Shoulders", TRACKING_TYPES.WEIGHTED_REPS],
-  ["barbell-curl", "Barbell curl", "Biceps", TRACKING_TYPES.WEIGHTED_REPS],
-  ["dumbbell-curl", "Dumbbell curl", "Biceps", TRACKING_TYPES.WEIGHTED_REPS],
-  ["hammer-curl", "Hammer curl", "Biceps", TRACKING_TYPES.WEIGHTED_REPS],
-  ["triceps-pushdown", "Triceps pushdown", "Triceps", TRACKING_TYPES.WEIGHTED_REPS],
-  ["skull-crusher", "Skull crusher", "Triceps", TRACKING_TYPES.WEIGHTED_REPS],
-  ["overhead-triceps-extension", "Overhead triceps extension", "Triceps", TRACKING_TYPES.WEIGHTED_REPS],
-  ["squat", "Squat", "Legs", TRACKING_TYPES.WEIGHTED_REPS],
-  ["leg-press", "Leg press", "Legs", TRACKING_TYPES.WEIGHTED_REPS],
-  ["leg-curl", "Leg curl", "Legs", TRACKING_TYPES.WEIGHTED_REPS],
-  ["leg-extension", "Leg extension", "Legs", TRACKING_TYPES.WEIGHTED_REPS],
-  ["deadlift", "Deadlift", "Legs", TRACKING_TYPES.WEIGHTED_REPS],
-  ["wall-sit", "Wall sit", "Legs", TRACKING_TYPES.TIMED_HOLD],
-  ["farmer-carry", "Farmer carry", "Legs", TRACKING_TYPES.CARRY],
-  ["plank", "Plank", "Core", TRACKING_TYPES.TIMED_HOLD],
-  ["side-plank", "Side plank", "Core", TRACKING_TYPES.TIMED_HOLD],
-  ["crunches", "Crunches", "Core", TRACKING_TYPES.BODYWEIGHT_REPS],
-  ["push-ups", "Push-ups", "Bodyweight", TRACKING_TYPES.BODYWEIGHT_REPS],
-  ["pull-ups", "Pull-ups", "Bodyweight", TRACKING_TYPES.BODYWEIGHT_REPS],
-  ["dips", "Dips", "Bodyweight", TRACKING_TYPES.BODYWEIGHT_REPS],
-  ["treadmill", "Treadmill", "Cardio", TRACKING_TYPES.CARDIO],
-  ["cycling", "Cycling", "Cardio", TRACKING_TYPES.CARDIO],
-  ["elliptical", "Elliptical", "Cardio", TRACKING_TYPES.CARDIO],
-  ["rowing-machine", "Rowing machine", "Cardio", TRACKING_TYPES.CARDIO],
-  ["stretching", "Stretching", "Other", TRACKING_TYPES.MOBILITY],
-].map(([id, name, muscleGroup, mode]) => ({ id: `builtin:${id}`, name, muscleGroup, mode }));
+import {
+  BUILT_IN_EXERCISES,
+  DEFAULT_USERS,
+  LEGACY_STORAGE_KEY,
+  MUSCLE_GROUPS,
+  SELECTED_USER_KEY,
+  STORAGE_KEY,
+  TRACKING_TYPES,
+} from "./constants.js";
+import {
+  addDays,
+  addMonths,
+  createId,
+  escapeHtml,
+  formatNumber,
+  getMondayIndex,
+  getMonthStart,
+  getTodayValue,
+  slug,
+  toDisplayDate,
+} from "./utils.js";
+import {
+  defaultModeForMuscle,
+  describeCardioSet,
+  describeCarrySet,
+  describeMobilitySet,
+  describeRepsSet,
+  describeTimedSet,
+  getBestSet,
+  getExerciseVolume,
+  getFailureSetCount,
+  getSessionSets,
+  getSessionVolume,
+  modeLabel,
+  normalizeMode,
+  normalizeSets,
+  summarizeExercise,
+} from "./workout.js";
 
 const activeUserName = document.querySelector("#activeUserName");
 const userSelect = document.querySelector("#userSelect");
 const userForm = document.querySelector("#userForm");
 const newUserNameInput = document.querySelector("#newUserName");
 const deleteUserButton = document.querySelector("#deleteUser");
+const exportDataButton = document.querySelector("#exportData");
+const importDataInput = document.querySelector("#importData");
 const tabButtons = document.querySelectorAll(".tab-button");
 const subTabButtons = document.querySelectorAll(".sub-tab");
 const logView = document.querySelector("#logView");
@@ -110,15 +90,6 @@ let state = loadState();
 let calendarMonth = getMonthStart(getTodayValue());
 let selectedDetailDate = "";
 
-function createId() {
-  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-function slug(value) {
-  return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-}
-
 function createUser(name) {
   return {
     id: createId(),
@@ -147,7 +118,7 @@ function loadState() {
       selectedUserId: stored.users.some((user) => user.id === selectedUserId)
         ? selectedUserId
         : stored.users[0].id,
-      customExercises: Array.isArray(stored.customExercises) ? stored.customExercises : [],
+      customExercises: normalizeCustomExercises(Array.isArray(stored.customExercises) ? stored.customExercises : []),
       sessions: normalizeSessions(Array.isArray(stored.sessions) ? stored.sessions : []),
     };
     hydrateMissingCustomExercises(loaded);
@@ -184,50 +155,11 @@ function normalizeSessions(sessions) {
   }));
 }
 
-function normalizeSets(sets, mode) {
-  return sets.map((set) => normalizeSet(set, mode));
-}
-
-function normalizeMode(mode) {
-  if (mode === "strength") return TRACKING_TYPES.WEIGHTED_REPS;
-  if (mode === "bodyweight") return TRACKING_TYPES.BODYWEIGHT_REPS;
-  if (Object.values(TRACKING_TYPES).includes(mode)) return mode;
-  return TRACKING_TYPES.WEIGHTED_REPS;
-}
-
-function normalizeSet(set, mode) {
-  if (mode === TRACKING_TYPES.CARDIO) {
-    return {
-      duration: Number(set.duration) || 0,
-      distance: Number(set.distance) || 0,
-      intensity: set.intensity || "",
-    };
-  }
-  if (mode === TRACKING_TYPES.TIMED_HOLD) {
-    return {
-      duration: Number(set.duration) || 0,
-      weight: Number(set.weight) || 0,
-      failure: Boolean(set.failure),
-    };
-  }
-  if (mode === TRACKING_TYPES.CARRY) {
-    return {
-      weight: Number(set.weight) || 0,
-      distance: Number(set.distance) || 0,
-      duration: Number(set.duration) || 0,
-    };
-  }
-  if (mode === TRACKING_TYPES.MOBILITY) {
-    return {
-      duration: Number(set.duration) || 0,
-      notes: set.notes || "",
-    };
-  }
-  return {
-    reps: Number(set.reps) || 1,
-    weight: Number(set.weight) || 0,
-    failure: Boolean(set.failure),
-  };
+function normalizeCustomExercises(exercises) {
+  return exercises.map((exercise) => ({
+    ...exercise,
+    mode: normalizeMode(exercise.mode || defaultModeForMuscle(exercise.muscleGroup)),
+  }));
 }
 
 function migrateLegacyLogs(userId) {
@@ -302,6 +234,65 @@ function saveState() {
   localStorage.setItem(SELECTED_USER_KEY, state.selectedUserId);
 }
 
+function createExportPayload() {
+  return {
+    app: "gym-workout-log",
+    exportedAt: new Date().toISOString(),
+    storageKey: STORAGE_KEY,
+    version: 2,
+    data: state,
+  };
+}
+
+function exportBackup() {
+  const payload = createExportPayload();
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `gym-workout-log-backup-${getTodayValue()}.json`;
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
+function getImportData(payload) {
+  const data = payload?.data || payload;
+  if (!data || !Array.isArray(data.users) || !Array.isArray(data.sessions)) return null;
+  return {
+    users: data.users,
+    selectedUserId: data.users.some((user) => user.id === data.selectedUserId)
+      ? data.selectedUserId
+      : data.users[0]?.id,
+    customExercises: normalizeCustomExercises(Array.isArray(data.customExercises) ? data.customExercises : []),
+    sessions: normalizeSessions(data.sessions),
+  };
+}
+
+function importBackup(data) {
+  const imported = getImportData(data);
+  if (!imported?.users.length || !imported.selectedUserId) {
+    alert("This backup file does not look valid.");
+    return false;
+  }
+  if (!confirm("Importing this backup will replace the current data on this device. Continue?")) {
+    return false;
+  }
+  hydrateMissingCustomExercises(imported);
+  state = imported;
+  saveState();
+  calendarMonth = getMonthStart(getTodayValue());
+  selectedDetailDate = "";
+  hideSessionDetail();
+  resetForm();
+  renderUsers();
+  renderAllExercisePickers();
+  renderHistory();
+  alert("Backup imported.");
+  return true;
+}
+
 function getActiveUser() {
   return state.users.find((user) => user.id === state.selectedUserId) || state.users[0];
 }
@@ -323,150 +314,6 @@ function findBuiltInByName(name, mode) {
 
 function findExerciseDefinition(id) {
   return [...BUILT_IN_EXERCISES, ...state.customExercises].find((exercise) => exercise.id === id);
-}
-
-function toDisplayDate(value) {
-  if (!value) return "-";
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(`${value}T00:00:00`));
-}
-
-function getTodayValue() {
-  const now = new Date();
-  const offset = now.getTimezoneOffset() * 60 * 1000;
-  return new Date(now.getTime() - offset).toISOString().slice(0, 10);
-}
-
-function formatNumber(value) {
-  return new Intl.NumberFormat("en-IN", {
-    maximumFractionDigits: 1,
-  }).format(value);
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function getMonthStart(dateValue) {
-  return `${dateValue.slice(0, 7)}-01`;
-}
-
-function toDateValue(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function addDays(dateValue, days) {
-  const [year, month, day] = dateValue.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-  date.setDate(date.getDate() + days);
-  return toDateValue(date);
-}
-
-function addMonths(dateValue, months) {
-  const [year, month, day] = dateValue.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-  date.setMonth(date.getMonth() + months);
-  return toDateValue(date);
-}
-
-function getMondayIndex(dateValue) {
-  const day = new Date(`${dateValue}T00:00:00`).getDay();
-  return (day + 6) % 7;
-}
-
-function getSetVolume(set) {
-  return Number(set.reps || 0) * Number(set.weight || 0);
-}
-
-function getExerciseVolume(exercise) {
-  if (![TRACKING_TYPES.WEIGHTED_REPS, TRACKING_TYPES.BODYWEIGHT_REPS].includes(exercise.mode)) return 0;
-  return exercise.sets.reduce((sum, set) => sum + getSetVolume(set), 0);
-}
-
-function getSessionVolume(session) {
-  return session.exercises.reduce((sum, exercise) => sum + getExerciseVolume(exercise), 0);
-}
-
-function getSessionSets(session) {
-  return session.exercises.reduce((count, exercise) => count + exercise.sets.length, 0);
-}
-
-function getFailureSetCount(session) {
-  return session.exercises.reduce((count, exercise) => {
-    if (![TRACKING_TYPES.WEIGHTED_REPS, TRACKING_TYPES.BODYWEIGHT_REPS, TRACKING_TYPES.TIMED_HOLD].includes(exercise.mode)) {
-      return count;
-    }
-    return count + exercise.sets.filter((set) => set.failure).length;
-  }, 0);
-}
-
-function describeRepsSet(set, exercise) {
-  const label = exercise.mode === TRACKING_TYPES.BODYWEIGHT_REPS ? "kg added" : "kg";
-  return `${formatNumber(set.weight || 0)}${label === "kg" ? "kg" : "kg added"} x ${set.reps}`;
-}
-
-function describeTimedSet(set) {
-  const parts = [`${formatNumber(set.duration || 0)} sec`];
-  if (set.weight) parts.push(`${formatNumber(set.weight)} kg added`);
-  if (set.failure) parts.push("failure");
-  return parts.join(" / ");
-}
-
-function describeCardioSet(set) {
-  const parts = [`${formatNumber(set.duration || 0)} min`];
-  if (set.distance) parts.push(`${formatNumber(set.distance)} km`);
-  if (set.intensity) parts.push(set.intensity);
-  return parts.join(" / ");
-}
-
-function describeCarrySet(set) {
-  const parts = [];
-  if (set.weight) parts.push(`${formatNumber(set.weight)} kg`);
-  if (set.distance) parts.push(`${formatNumber(set.distance)} m`);
-  if (set.duration) parts.push(`${formatNumber(set.duration)} sec`);
-  return parts.length ? parts.join(" / ") : "Carry";
-}
-
-function describeMobilitySet(set) {
-  const parts = [];
-  if (set.duration) parts.push(`${formatNumber(set.duration)} min`);
-  if (set.notes) parts.push(set.notes);
-  return parts.length ? parts.join(" / ") : "Mobility";
-}
-
-function summarizeExercise(exercise) {
-  if (exercise.mode === TRACKING_TYPES.CARDIO) {
-    return exercise.sets.map(describeCardioSet).join(", ");
-  }
-  if (exercise.mode === TRACKING_TYPES.TIMED_HOLD) {
-    return exercise.sets.map(describeTimedSet).join(", ");
-  }
-  if (exercise.mode === TRACKING_TYPES.CARRY) {
-    return exercise.sets.map(describeCarrySet).join(", ");
-  }
-  if (exercise.mode === TRACKING_TYPES.MOBILITY) {
-    return exercise.sets.map(describeMobilitySet).join(", ");
-  }
-  return exercise.sets.map((set) => describeRepsSet(set, exercise)).join(", ");
-}
-
-function getBestSet(exercise) {
-  if (![TRACKING_TYPES.WEIGHTED_REPS, TRACKING_TYPES.BODYWEIGHT_REPS].includes(exercise.mode)) return null;
-  return [...exercise.sets].sort((a, b) => {
-    if (Number(b.weight) !== Number(a.weight)) return Number(b.weight) - Number(a.weight);
-    return Number(b.reps) - Number(a.reps);
-  })[0];
 }
 
 function renderUsers() {
@@ -585,22 +432,6 @@ function updateExerciseSummary(card) {
   const meta = card.querySelector(".summary-meta");
   title.textContent = name;
   meta.textContent = `${muscle} - ${modeLabel(mode)} - ${sets.length} ${sets.length === 1 ? "set" : "sets"}${sets.length ? ` - ${summarizeExercise({ mode, sets })}` : ""}`;
-}
-
-function modeLabel(mode) {
-  if (mode === TRACKING_TYPES.BODYWEIGHT_REPS) return "Bodyweight reps";
-  if (mode === TRACKING_TYPES.TIMED_HOLD) return "Timed hold";
-  if (mode === TRACKING_TYPES.CARDIO) return "Cardio";
-  if (mode === TRACKING_TYPES.CARRY) return "Carry / distance";
-  if (mode === TRACKING_TYPES.MOBILITY) return "Mobility";
-  return "Weighted reps";
-}
-
-function defaultModeForMuscle(muscleGroup) {
-  if (muscleGroup === "Cardio") return TRACKING_TYPES.CARDIO;
-  if (muscleGroup === "Bodyweight") return TRACKING_TYPES.BODYWEIGHT_REPS;
-  if (muscleGroup === "Core") return TRACKING_TYPES.TIMED_HOLD;
-  return TRACKING_TYPES.WEIGHTED_REPS;
 }
 
 function clearSelectedExercise(card) {
@@ -1369,6 +1200,22 @@ userForm.addEventListener("submit", (event) => {
 });
 
 deleteUserButton.addEventListener("click", handleDeleteUser);
+exportDataButton.addEventListener("click", exportBackup);
+importDataInput.addEventListener("change", () => {
+  const file = importDataInput.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.addEventListener("load", () => {
+    try {
+      importBackup(JSON.parse(String(reader.result || "")));
+    } catch {
+      alert("Could not read that backup file.");
+    } finally {
+      importDataInput.value = "";
+    }
+  });
+  reader.readAsText(file);
+});
 resetFormButton.addEventListener("click", resetForm);
 addExerciseButton.addEventListener("click", () => addExercise());
 prevMonthButton.addEventListener("click", () => {

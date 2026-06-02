@@ -40,6 +40,12 @@
             </form>
 
             <button class="secondary-action danger" id="deleteUser" type="button">Delete selected user</button>
+
+            <div class="backup-actions" aria-label="Backup actions">
+              <button class="secondary-action" id="exportData" type="button">Export backup</button>
+              <label class="secondary-action import-action" for="importData">Import backup</label>
+              <input class="sr-only" id="importData" type="file" accept="application/json,.json" />
+            </div>
           </div>
         </details>
       </header>
@@ -337,6 +343,6 @@
       </div>
     </template>
 
-    <script src="./src/app.js"></script>
+    <script type="module" src="./src/app.js"></script>
   </body>
 </html>

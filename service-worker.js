@@ -1,9 +1,12 @@
-const CACHE_NAME = "gym-workout-log:v10";
+const CACHE_NAME = "gym-workout-log:v11";
 const APP_ASSETS = [
   "./",
   "./index.html",
   "./src/styles.css",
   "./src/app.js",
+  "./src/constants.js",
+  "./src/utils.js",
+  "./src/workout.js",
   "./manifest.webmanifest",
   "./assets/icon.svg",
   "./assets/icon-192.png",

@@ -169,6 +169,17 @@ h3 {
   gap: 8px;
 }
 
+.backup-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.import-action {
+  display: inline-grid;
+  place-items: center;
+}
+
 .view-tabs,
 .sub-tabs {
   display: grid;
@@ -1071,6 +1082,7 @@ textarea:focus {
   }
 
   .user-form,
+  .backup-actions,
   .detail-header,
   .detail-session-heading,
   .detail-exercise-heading,
