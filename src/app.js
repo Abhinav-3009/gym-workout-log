@@ -427,6 +427,7 @@ function updateExerciseSummary(card) {
   const name = card.dataset.exerciseName || "New exercise";
   const mode = normalizeMode(card.dataset.mode || card.querySelector(".exercise-mode").value);
   const muscle = card.querySelector(".exercise-muscle").value || "Other";
+  updateSetSummaries(card);
   const sets = getExerciseDataFromCard(card).sets;
   const title = card.querySelector(".summary-title");
   const meta = card.querySelector(".summary-meta");
@@ -444,6 +445,23 @@ function updateSetRemoveButtons(card) {
   const setRows = card.querySelectorAll(".set-row");
   setRows.forEach((setRow) => {
     setRow.querySelector(".remove-set").disabled = setRows.length <= 1;
+  });
+}
+
+function setSetExpanded(setRow, expanded) {
+  setRow.classList.toggle("is-collapsed", !expanded);
+  setRow.querySelector(".set-summary-button").setAttribute("aria-expanded", String(expanded));
+}
+
+function collapseSetRows(card) {
+  card.querySelectorAll(".set-row").forEach((setRow) => setSetExpanded(setRow, false));
+}
+
+function updateSetSummaries(card) {
+  const mode = normalizeMode(card.dataset.mode || card.querySelector(".exercise-mode").value);
+  card.querySelectorAll(".set-row").forEach((setRow, index) => {
+    const set = getSetDataFromRow(setRow, mode);
+    setRow.querySelector(".set-summary-button").textContent = `Set ${index + 1}: ${describeSet(set, { mode })}`;
   });
 }
 
@@ -478,6 +496,7 @@ function addSet(card, data = {}) {
   }
   card.querySelector(".set-list").append(node);
   updateSetRemoveButtons(card);
+  updateSetSummaries(card);
   updateExerciseSummary(card);
 }
 
@@ -591,46 +610,48 @@ function getExerciseDataFromCard(card) {
     name: card.dataset.exerciseName || "",
     muscleGroup: card.querySelector(".exercise-muscle").value,
     mode,
-    sets: [...card.querySelectorAll(".set-row")].map((setRow) => {
-      if (mode === TRACKING_TYPES.CARDIO) {
-        return {
-          duration: Number(setRow.querySelector(".cardio-duration").value || 0),
-          distance: Number(setRow.querySelector(".cardio-distance").value || 0),
-          intensity: setRow.querySelector(".cardio-intensity").value.trim(),
-        };
-      }
-      if (mode === TRACKING_TYPES.TIMED_HOLD) {
-        return {
-          duration: Number(setRow.querySelector(".timed-duration").value || 0),
-          weight: Number(setRow.querySelector(".timed-weight").value || 0),
-          failure: setRow.querySelector(".timed-failure").checked,
-        };
-      }
-      if (mode === TRACKING_TYPES.CARRY) {
-        return {
-          weight: Number(setRow.querySelector(".carry-weight").value || 0),
-          distance: Number(setRow.querySelector(".carry-distance").value || 0),
-          duration: Number(setRow.querySelector(".carry-duration").value || 0),
-        };
-      }
-      if (mode === TRACKING_TYPES.MOBILITY) {
-        return {
-          duration: Number(setRow.querySelector(".mobility-duration").value || 0),
-          notes: setRow.querySelector(".mobility-notes").value.trim(),
-        };
-      }
+    sets: [...card.querySelectorAll(".set-row")].map((setRow) => getSetDataFromRow(setRow, mode)),
+  };
+}
 
-      return {
-        reps: Number(setRow.querySelector(".set-reps").value),
-        weight: Number(setRow.querySelector(".set-weight").value || 0),
-        failure: setRow.querySelector(".set-failure").checked,
-        dropSet: setRow.dataset.legacyDropSet === "true" && !setRow.querySelector(".drop-set-row"),
-        dropSets: [...setRow.querySelectorAll(".drop-set-row")].map((dropRow) => ({
-          reps: Number(dropRow.querySelector(".drop-reps").value),
-          weight: Number(dropRow.querySelector(".drop-weight").value || 0),
-        })),
-      };
-    }),
+function getSetDataFromRow(setRow, mode) {
+  if (mode === TRACKING_TYPES.CARDIO) {
+    return {
+      duration: Number(setRow.querySelector(".cardio-duration").value || 0),
+      distance: Number(setRow.querySelector(".cardio-distance").value || 0),
+      intensity: setRow.querySelector(".cardio-intensity").value.trim(),
+    };
+  }
+  if (mode === TRACKING_TYPES.TIMED_HOLD) {
+    return {
+      duration: Number(setRow.querySelector(".timed-duration").value || 0),
+      weight: Number(setRow.querySelector(".timed-weight").value || 0),
+      failure: setRow.querySelector(".timed-failure").checked,
+    };
+  }
+  if (mode === TRACKING_TYPES.CARRY) {
+    return {
+      weight: Number(setRow.querySelector(".carry-weight").value || 0),
+      distance: Number(setRow.querySelector(".carry-distance").value || 0),
+      duration: Number(setRow.querySelector(".carry-duration").value || 0),
+    };
+  }
+  if (mode === TRACKING_TYPES.MOBILITY) {
+    return {
+      duration: Number(setRow.querySelector(".mobility-duration").value || 0),
+      notes: setRow.querySelector(".mobility-notes").value.trim(),
+    };
+  }
+
+  return {
+    reps: Number(setRow.querySelector(".set-reps").value),
+    weight: Number(setRow.querySelector(".set-weight").value || 0),
+    failure: setRow.querySelector(".set-failure").checked,
+    dropSet: setRow.dataset.legacyDropSet === "true" && !setRow.querySelector(".drop-set-row"),
+    dropSets: [...setRow.querySelectorAll(".drop-set-row")].map((dropRow) => ({
+      reps: Number(dropRow.querySelector(".drop-reps").value),
+      weight: Number(dropRow.querySelector(".drop-weight").value || 0),
+    })),
   };
 }
 
@@ -1390,6 +1411,12 @@ exerciseList.addEventListener("click", (event) => {
     return;
   }
 
+  if (button.classList.contains("set-summary-button")) {
+    const setRow = button.closest(".set-row");
+    setSetExpanded(setRow, setRow.classList.contains("is-collapsed"));
+    return;
+  }
+
   if (button.classList.contains("save-custom-exercise")) {
     const name = card.querySelector(".custom-exercise-name").value.trim();
     const muscleGroup = card.querySelector(".custom-muscle").value;
@@ -1421,6 +1448,7 @@ exerciseList.addEventListener("click", (event) => {
   }
 
   if (button.classList.contains("add-set")) {
+    collapseSetRows(card);
     addSet(card);
     return;
   }

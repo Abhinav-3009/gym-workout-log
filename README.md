@@ -20,6 +20,7 @@ The app is currently built for simple personal use: choose a user, log a workout
   - Mobility
 - Failure set checkbox where relevant.
 - Inline drop-set rows for reps-based sets.
+- Collapsible set rows while logging workouts.
 - Notes per workout.
 - Monday-first calendar for workout history with compact workout-day markers.
 - Weekly consistency streaks in workout history.
