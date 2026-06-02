@@ -109,18 +109,24 @@
 
         <section class="history-subview is-active" id="sessionsView">
           <header class="toolbar">
-            <div class="stats" aria-label="Workout statistics">
-              <div>
+            <div class="stats streak-dashboard" aria-label="Workout streaks">
+              <div class="streak-card streak-hero">
+                <span class="streak-icon" aria-hidden="true">🔥</span>
                 <span id="totalLogs">0</span>
-                <small>active streak</small>
+                <small>current streak</small>
+                <p id="streakStatus">Start this week strong</p>
               </div>
-              <div>
+              <div class="streak-card week-card">
                 <span id="totalVolume">0</span>
-                <small>best streak</small>
+                <small>this week</small>
+                <div class="week-progress" aria-hidden="true">
+                  <span id="weekProgressBar"></span>
+                </div>
               </div>
-              <div>
+              <div class="streak-card best-card">
+                <span class="streak-icon" aria-hidden="true">🏆</span>
                 <span id="recentDate">-</span>
-                <small>last trained</small>
+                <small>best streak</small>
               </div>
             </div>
           </header>

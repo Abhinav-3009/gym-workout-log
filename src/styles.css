@@ -546,30 +546,81 @@ textarea:focus {
   width: 100%;
 }
 
-.stats {
+.streak-dashboard {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1.4fr 0.9fr 0.9fr;
   gap: 10px;
 }
 
-.stats div {
-  min-height: 62px;
+.streak-card {
+  position: relative;
+  min-height: 86px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 10px;
+  padding: 12px;
   background: var(--field);
+  overflow: hidden;
 }
 
-.stats span {
+.streak-hero {
+  border-color: rgba(249, 115, 22, 0.42);
+  background:
+    linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(29, 37, 43, 0.96)),
+    var(--field);
+}
+
+.best-card {
+  border-color: rgba(163, 230, 53, 0.3);
+  background:
+    linear-gradient(135deg, rgba(163, 230, 53, 0.13), rgba(29, 37, 43, 0.96)),
+    var(--field);
+}
+
+.streak-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 1.1rem;
+}
+
+.streak-card > span:not(.streak-icon) {
   display: block;
-  font-size: 1.28rem;
-  font-weight: 850;
+  font-size: 1.75rem;
+  font-weight: 920;
   line-height: 1.1;
 }
 
-.stats small {
+.streak-hero > span:not(.streak-icon) {
+  font-size: 2.35rem;
+}
+
+.streak-card small {
   color: var(--muted);
   font-weight: 750;
+}
+
+.streak-card p {
+  margin: 10px 0 0;
+  color: var(--energy);
+  font-size: 0.84rem;
+  font-weight: 850;
+}
+
+.week-progress {
+  height: 7px;
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(148, 163, 160, 0.18);
+}
+
+.week-progress span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--energy), var(--accent));
+  transition: width 180ms ease;
 }
 
 .calendar-header {
@@ -699,6 +750,10 @@ textarea:focus {
 
 .is-positive {
   color: var(--accent);
+}
+
+.is-warning {
+  color: var(--energy);
 }
 
 .is-negative {
@@ -1126,6 +1181,22 @@ textarea:focus {
   .progress-summary,
   .chart-grid {
     grid-template-columns: 1fr;
+  }
+
+  .streak-dashboard {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .streak-hero {
+    grid-column: 1 / -1;
+  }
+
+  .streak-card {
+    min-height: 82px;
+  }
+
+  .streak-hero > span:not(.streak-icon) {
+    font-size: 2.15rem;
   }
 
   .progress-card summary {

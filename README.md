@@ -23,7 +23,7 @@ The app is currently built for simple personal use: choose a user, log a workout
 - Collapsible set rows while logging workouts.
 - Notes per workout.
 - Monday-first calendar for workout history with compact workout-day markers.
-- Weekly consistency streaks in workout history.
+- Workout-day streaks with a 4-days-per-week consistency target.
 - Full-screen Training Journal detail view for selected dates.
 - Progress view with:
   - summary cards

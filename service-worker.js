@@ -1,4 +1,4 @@
-const CACHE_NAME = "gym-workout-log:v16";
+const CACHE_NAME = "gym-workout-log:v18";
 const APP_ASSETS = [
   "./",
   "./index.html",

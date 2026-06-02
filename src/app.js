@@ -63,6 +63,8 @@ const addExerciseButton = document.querySelector("#addExercise");
 const totalLogs = document.querySelector("#totalLogs");
 const totalVolume = document.querySelector("#totalVolume");
 const recentDate = document.querySelector("#recentDate");
+const streakStatus = document.querySelector("#streakStatus");
+const weekProgressBar = document.querySelector("#weekProgressBar");
 const prevMonthButton = document.querySelector("#prevMonth");
 const nextMonthButton = document.querySelector("#nextMonth");
 const calendarTitle = document.querySelector("#calendarTitle");
@@ -722,59 +724,95 @@ function editSession(session) {
 
 function renderStats() {
   const sessions = getActiveSessions();
-  const latest = [...sessions].sort((a, b) => b.date.localeCompare(a.date))[0];
-  const streaks = getWorkoutWeekStreaks(sessions);
-  totalLogs.textContent = formatStreakLabel(streaks.active);
-  totalVolume.textContent = formatStreakLabel(streaks.best);
-  recentDate.textContent = latest ? toShortDisplayDate(latest.date) : "-";
-}
-
-function toShortDisplayDate(value) {
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "numeric",
-    month: "short",
-  }).format(new Date(`${value}T00:00:00`));
+  const streaks = getWorkoutDayStreaks(sessions);
+  totalLogs.textContent = formatStreakNumber(streaks.current);
+  totalVolume.textContent = `${streaks.thisWeek}/${WEEKLY_STREAK_TARGET}`;
+  recentDate.textContent = formatStreakNumber(streaks.best);
+  totalVolume.className = getWeekProgressClass(streaks.thisWeek);
+  streakStatus.textContent = getStreakStatus(streaks);
+  weekProgressBar.style.width = `${Math.min((streaks.thisWeek / WEEKLY_STREAK_TARGET) * 100, 100)}%`;
 }
 
 function getWeekStart(dateValue) {
   return addDays(dateValue, -getMondayIndex(dateValue));
 }
 
-function formatStreakLabel(weeks) {
-  return weeks ? `${weeks} wk` : "-";
+const WEEKLY_STREAK_TARGET = 4;
+
+function formatStreakNumber(days) {
+  if (!days) return "-";
+  return String(days);
 }
 
-function getWorkoutWeekStreaks(sessions) {
-  const trainedWeeks = new Set(sessions.map((session) => getWeekStart(session.date)));
-  if (!trainedWeeks.size) return { active: 0, best: 0 };
+function getWeekProgressClass(days) {
+  if (days >= WEEKLY_STREAK_TARGET) return "is-positive";
+  if (days === WEEKLY_STREAK_TARGET - 1) return "is-warning";
+  return "";
+}
 
-  const sortedWeeks = [...trainedWeeks].sort();
-  let best = 1;
-  let run = 1;
-  for (let index = 1; index < sortedWeeks.length; index += 1) {
-    if (sortedWeeks[index] === addDays(sortedWeeks[index - 1], 7)) {
-      run += 1;
-    } else {
-      run = 1;
-    }
-    best = Math.max(best, run);
+function getStreakStatus(streaks) {
+  const remaining = Math.max(WEEKLY_STREAK_TARGET - streaks.thisWeek, 0);
+  if (streaks.thisWeek >= WEEKLY_STREAK_TARGET) {
+    return streaks.thisWeek > WEEKLY_STREAK_TARGET ? "Extra day added" : "Week locked";
   }
+  if (!streaks.current) return `${remaining} to start a streak`;
+  return `${remaining} more to lock this week`;
+}
 
+function getWorkoutDayStreaks(sessions) {
+  const datesByWeek = getWorkoutDatesByWeek(sessions);
   const thisWeek = getWeekStart(getTodayValue());
-  const previousWeek = addDays(thisWeek, -7);
-  let anchorWeek = "";
-  if (trainedWeeks.has(thisWeek)) {
-    anchorWeek = thisWeek;
-  } else if (trainedWeeks.has(previousWeek)) {
-    anchorWeek = previousWeek;
+  const sortedWeeks = [...datesByWeek.keys()].filter((weekStart) => weekStart <= thisWeek).sort();
+  let runDays = 0;
+  let best = 0;
+  let previousWeek = "";
+
+  sortedWeeks.forEach((weekStart) => {
+    const weekDays = datesByWeek.get(weekStart).size;
+    const isCurrentWeek = weekStart === thisWeek;
+    const weekQualifies = weekDays >= WEEKLY_STREAK_TARGET;
+    const isConsecutive = !previousWeek || weekStart === addDays(previousWeek, 7);
+
+    if (!isConsecutive) runDays = 0;
+
+    if (weekQualifies || isCurrentWeek) {
+      runDays += weekDays;
+      best = Math.max(best, runDays);
+    } else {
+      runDays = 0;
+    }
+    previousWeek = weekStart;
+  });
+
+  const thisWeekDays = datesByWeek.get(thisWeek)?.size || 0;
+  const current = getCurrentWorkoutDayStreak(datesByWeek, thisWeek);
+  return { current, best, thisWeek: thisWeekDays };
+}
+
+function getCurrentWorkoutDayStreak(datesByWeek, thisWeek) {
+  const currentWeekDays = datesByWeek.get(thisWeek)?.size || 0;
+  let weekStart = thisWeek;
+  let current = currentWeekDays;
+
+  while (weekStart) {
+    const previous = addDays(weekStart, -7);
+    const previousDays = datesByWeek.get(previous)?.size || 0;
+    if (previousDays < WEEKLY_STREAK_TARGET) break;
+    current += previousDays;
+    weekStart = previous;
   }
 
-  let active = 0;
-  while (anchorWeek && trainedWeeks.has(addDays(anchorWeek, active * -7))) {
-    active += 1;
-  }
+  return current;
+}
 
-  return { active, best };
+function getWorkoutDatesByWeek(sessions) {
+  const datesByWeek = new Map();
+  sessions.forEach((session) => {
+    const weekStart = getWeekStart(session.date);
+    if (!datesByWeek.has(weekStart)) datesByWeek.set(weekStart, new Set());
+    datesByWeek.get(weekStart).add(session.date);
+  });
+  return datesByWeek;
 }
 
 function renderCalendar() {
