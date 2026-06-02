@@ -471,6 +471,7 @@ function addSet(card, data = {}) {
     node.querySelector(".set-reps").value = data.reps ?? 10;
     node.querySelector(".set-weight").value = data.weight ?? 0;
     node.querySelector(".set-failure").checked = Boolean(data.failure);
+    node.querySelector(".set-drop").checked = Boolean(data.dropSet);
   }
   card.querySelector(".set-list").append(node);
   updateSetRemoveButtons(card);
@@ -513,7 +514,7 @@ function getDefaultSet(mode) {
   if (normalizedMode === TRACKING_TYPES.TIMED_HOLD) return { duration: "", weight: 0, failure: false };
   if (normalizedMode === TRACKING_TYPES.CARRY) return { weight: "", distance: "", duration: "" };
   if (normalizedMode === TRACKING_TYPES.MOBILITY) return { duration: "", notes: "" };
-  return { reps: 10, weight: 0, failure: false };
+  return { reps: 10, weight: 0, failure: false, dropSet: false };
 }
 
 function addExercise(data = {}, options = {}) {
@@ -601,6 +602,7 @@ function getExerciseDataFromCard(card) {
         reps: Number(setRow.querySelector(".set-reps").value),
         weight: Number(setRow.querySelector(".set-weight").value || 0),
         failure: setRow.querySelector(".set-failure").checked,
+        dropSet: setRow.querySelector(".set-drop").checked,
       };
     }),
   };
@@ -651,19 +653,61 @@ function editSession(session) {
   workoutNameInput.focus();
 }
 
-function createMetric(label) {
-  const metric = document.createElement("span");
-  metric.textContent = label;
-  return metric;
-}
-
 function renderStats() {
   const sessions = getActiveSessions();
-  const volume = sessions.reduce((sum, session) => sum + getSessionVolume(session), 0);
   const latest = [...sessions].sort((a, b) => b.date.localeCompare(a.date))[0];
-  totalLogs.textContent = sessions.length;
-  totalVolume.textContent = formatNumber(volume);
-  recentDate.textContent = latest ? toDisplayDate(latest.date) : "-";
+  const streaks = getWorkoutWeekStreaks(sessions);
+  totalLogs.textContent = formatStreakLabel(streaks.active);
+  totalVolume.textContent = formatStreakLabel(streaks.best);
+  recentDate.textContent = latest ? toShortDisplayDate(latest.date) : "-";
+}
+
+function toShortDisplayDate(value) {
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "short",
+  }).format(new Date(`${value}T00:00:00`));
+}
+
+function getWeekStart(dateValue) {
+  return addDays(dateValue, -getMondayIndex(dateValue));
+}
+
+function formatStreakLabel(weeks) {
+  return weeks ? `${weeks} wk` : "-";
+}
+
+function getWorkoutWeekStreaks(sessions) {
+  const trainedWeeks = new Set(sessions.map((session) => getWeekStart(session.date)));
+  if (!trainedWeeks.size) return { active: 0, best: 0 };
+
+  const sortedWeeks = [...trainedWeeks].sort();
+  let best = 1;
+  let run = 1;
+  for (let index = 1; index < sortedWeeks.length; index += 1) {
+    if (sortedWeeks[index] === addDays(sortedWeeks[index - 1], 7)) {
+      run += 1;
+    } else {
+      run = 1;
+    }
+    best = Math.max(best, run);
+  }
+
+  const thisWeek = getWeekStart(getTodayValue());
+  const previousWeek = addDays(thisWeek, -7);
+  let anchorWeek = "";
+  if (trainedWeeks.has(thisWeek)) {
+    anchorWeek = thisWeek;
+  } else if (trainedWeeks.has(previousWeek)) {
+    anchorWeek = previousWeek;
+  }
+
+  let active = 0;
+  while (anchorWeek && trainedWeeks.has(addDays(anchorWeek, active * -7))) {
+    active += 1;
+  }
+
+  return { active, best };
 }
 
 function renderCalendar() {
@@ -696,7 +740,16 @@ function renderCalendar() {
     button.classList.toggle("is-muted", !isCurrentMonth);
     button.classList.toggle("has-session", sessions.length > 0);
     if (sessions.length && isCurrentMonth) hasSessionInMonth = true;
-    button.innerHTML = `<span>${Number(dateValue.slice(8, 10))}</span>${sessions.length ? `<small>${sessions.length} workout${sessions.length === 1 ? "" : "s"}</small>` : ""}`;
+    button.setAttribute(
+      "aria-label",
+      sessions.length
+        ? `${toDisplayDate(dateValue)}, ${sessions.length} workout${sessions.length === 1 ? "" : "s"}`
+        : toDisplayDate(dateValue),
+    );
+    button.innerHTML = `
+      <span>${Number(dateValue.slice(8, 10))}</span>
+      ${sessions.length ? `<small class="calendar-session-mark" aria-hidden="true">${sessions.length > 1 ? `${sessions.length}x` : "🔥"}</small>` : ""}
+    `;
     calendarGrid.append(button);
   }
   calendarEmptyState.classList.toggle("is-visible", !hasSessionInMonth);

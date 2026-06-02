@@ -19,8 +19,10 @@ The app is currently built for simple personal use: choose a user, log a workout
   - Carry / distance
   - Mobility
 - Failure set checkbox where relevant.
+- Drop set checkbox for reps-based sets.
 - Notes per workout.
-- Monday-first calendar for workout history.
+- Monday-first calendar for workout history with compact workout-day markers.
+- Weekly consistency streaks in workout history.
 - Full-screen Training Journal detail view for selected dates.
 - Progress view with:
   - summary cards
@@ -245,4 +247,3 @@ If hosted on GitHub Pages or another static host, that host serves the app files
 - Import replaces data instead of merging.
 - Custom exercises can be added but not managed through a dedicated library screen yet.
 - No Play Store package yet.
-

@@ -40,6 +40,7 @@ export function normalizeSet(set, mode) {
     reps: Number(set.reps) || 1,
     weight: Number(set.weight) || 0,
     failure: Boolean(set.failure),
+    dropSet: Boolean(set.dropSet),
   };
 }
 
@@ -75,7 +76,9 @@ export function getFailureSetCount(session) {
 
 export function describeRepsSet(set, exercise) {
   const label = exercise.mode === TRACKING_TYPES.BODYWEIGHT_REPS ? "kg added" : "kg";
-  return `${formatNumber(set.weight || 0)}${label === "kg" ? "kg" : "kg added"} x ${set.reps}`;
+  const parts = [`${formatNumber(set.weight || 0)}${label === "kg" ? "kg" : "kg added"} x ${set.reps}`];
+  if (set.dropSet) parts.push("drop");
+  return parts.join(" / ");
 }
 
 export function describeTimedSet(set) {
