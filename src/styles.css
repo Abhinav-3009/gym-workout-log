@@ -592,7 +592,6 @@ textarea:focus {
 
 .analysis-card small,
 .chart-heading small,
-.detail-metrics,
 .metrics {
   color: var(--muted);
 }
@@ -628,14 +627,12 @@ textarea:focus {
   color: var(--warn);
 }
 
-.detail-metrics,
 .metrics {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.detail-metrics span,
 .metrics span {
   border-radius: 999px;
   background: var(--accent-soft);
@@ -830,7 +827,7 @@ textarea:focus {
   background:
     radial-gradient(circle at top left, rgba(163, 230, 53, 0.14), transparent 34%),
     var(--bg);
-  padding: 12px;
+  padding: 0 12px 12px;
 }
 
 .detail-shell {
@@ -848,12 +845,17 @@ textarea:focus {
   z-index: 2;
   background: rgba(16, 20, 24, 0.96);
   border-bottom: 1px solid var(--line);
-  padding: 10px 0;
+  margin: 0 -12px;
+  padding: 12px;
 }
 
 .detail-header > div {
   min-width: 0;
-  text-align: center;
+  text-align: left;
+}
+
+.detail-header .secondary-action {
+  flex: 0 0 auto;
 }
 
 .detail-exercise-card {

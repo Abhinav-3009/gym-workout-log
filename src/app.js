@@ -97,7 +97,6 @@ const closeDetailButton = document.querySelector("#closeDetail");
 const detailSessionCount = document.querySelector("#detailSessionCount");
 const detailDate = document.querySelector("#detailDate");
 const detailTitle = document.querySelector("#detailTitle");
-const detailMetrics = document.querySelector("#detailMetrics");
 const detailExercises = document.querySelector("#detailExercises");
 const detailNotes = document.querySelector("#detailNotes");
 const exerciseTemplate = document.querySelector("#exerciseTemplate");
@@ -1225,12 +1224,6 @@ function showSessionDetail(dateValue) {
   detailDate.textContent = toDisplayDate(dateValue);
   detailTitle.textContent = "Training journal";
   detailSessionCount.textContent = `${sessions.length} ${sessions.length === 1 ? "session" : "sessions"}`;
-  detailMetrics.replaceChildren(
-    createMetric(`${sessions.reduce((sum, session) => sum + session.exercises.length, 0)} exercises`),
-    createMetric(`${sessions.reduce((sum, session) => sum + getSessionSets(session), 0)} sets`),
-    createMetric(`${formatNumber(sessions.reduce((sum, session) => sum + getSessionVolume(session), 0))} kg volume`),
-    createMetric(`${sessions.reduce((sum, session) => sum + getFailureSetCount(session), 0)} failure`),
-  );
   detailExercises.replaceChildren();
   const prExerciseKeys = getActivePrExerciseKeys();
 
