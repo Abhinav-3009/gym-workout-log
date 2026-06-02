@@ -1,4 +1,4 @@
-const CACHE_NAME = "gym-workout-log:v15";
+const CACHE_NAME = "gym-workout-log:v16";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -8,9 +8,9 @@ const APP_ASSETS = [
   "./src/utils.js",
   "./src/workout.js",
   "./manifest.webmanifest",
-  "./assets/icon.svg",
-  "./assets/icon-192.png",
-  "./assets/icon-512.png",
+  "./assets/icon-v2.svg",
+  "./assets/icon-192-v2.png",
+  "./assets/icon-512-v2.png",
 ];
 
 self.addEventListener("install", (event) => {
