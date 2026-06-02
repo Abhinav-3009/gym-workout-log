@@ -303,6 +303,13 @@ textarea:focus {
   color: #111815;
 }
 
+.workout-form > .primary-action {
+  position: sticky;
+  bottom: 10px;
+  z-index: 4;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.32);
+}
+
 .primary-action:hover {
   background: var(--accent);
 }
@@ -734,6 +741,24 @@ textarea:focus {
   margin-top: 4px;
 }
 
+.pr-badge,
+.pr-chip {
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--energy);
+  color: #111815;
+  font-size: 0.68rem;
+  font-weight: 950;
+  line-height: 1;
+  padding: 4px 7px;
+  vertical-align: middle;
+}
+
+.pr-badge {
+  margin-left: 6px;
+}
+
 .progress-main-value {
   flex: 0 0 auto;
   border-radius: 999px;
@@ -866,6 +891,27 @@ textarea:focus {
   color: var(--muted);
   line-height: 1.5;
   white-space: pre-wrap;
+}
+
+.detail-session-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.detail-session-meta span {
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  padding: 6px 9px;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.detail-session-meta .pr-chip {
+  background: var(--energy);
+  color: #111815;
 }
 
 .detail-session-actions {

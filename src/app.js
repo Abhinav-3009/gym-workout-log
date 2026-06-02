@@ -727,7 +727,7 @@ function resetForm() {
   workoutNameInput.value = "";
   notesInput.value = "";
   addExercise({}, { collapseExisting: false });
-  submitButton.textContent = "Save session";
+  submitButton.textContent = "Save workout";
 }
 
 function getExerciseDataFromCard(card) {
@@ -815,7 +815,7 @@ function editSession(session) {
   notesInput.value = session.notes;
   exerciseList.replaceChildren();
   session.exercises.forEach((exercise, index) => addExercise(exercise, { collapseExisting: false, expanded: index === 0 }));
-  submitButton.textContent = "Update session";
+  submitButton.textContent = "Update workout";
   hideSessionDetail();
   setActiveView("log");
   workoutNameInput.focus();
@@ -927,6 +927,7 @@ function renderProgress() {
   const latest = rows[0].exercise;
   const mode = latest.mode;
   const analysis = getProgressAnalysis(rows);
+  const prSessionIds = getPrSessionIds(rows);
   progressSummary.innerHTML = renderProgressSummary(analysis, latest, rows.length);
   progressList.insertAdjacentHTML("beforeend", renderProgressCharts(analysis));
 
@@ -939,12 +940,13 @@ function renderProgress() {
     const failureCount = canTrackFailure ? exercise.sets.filter((set) => set.failure).length : 0;
     const compactSets = summarizeExercise(exercise);
     const bestLabel = bestSet ? describeRepsSet(bestSet, exercise) : getNonRepsBestLabel(exercise);
+    const isPr = prSessionIds.has(session.id);
 
     card.innerHTML = `
       <summary>
         <span>
           <small>${escapeHtml(toDisplayDate(session.date))}</small>
-          <strong>${escapeHtml(session.workoutName)}</strong>
+          <strong>${escapeHtml(session.workoutName)}${isPr ? ' <span class="pr-badge">PR</span>' : ""}</strong>
         </span>
         <span class="progress-main-value">${escapeHtml(point.display)}</span>
       </summary>
@@ -963,10 +965,16 @@ function getProgressAnalysis(rows) {
   const ascending = [...rows].sort((a, b) => a.session.date.localeCompare(b.session.date));
   const points = ascending.map(({ session, exercise }) => ({
     date: session.date,
+    sessionId: session.id,
     label: toDisplayDate(session.date),
     ...getProgressPoint(exercise),
     secondary: getSecondaryProgressPoint(exercise),
   }));
+  let bestSoFar = -Infinity;
+  points.forEach((point) => {
+    point.isPr = point.value > bestSoFar && point.value > 0;
+    bestSoFar = Math.max(bestSoFar, point.value);
+  });
   const latest = points.at(-1);
   const previous = points.at(-2);
   const best = [...points].sort((a, b) => b.value - a.value)[0];
@@ -990,6 +998,29 @@ function getProgressAnalysis(rows) {
         display: point.secondary.display,
       })),
   };
+}
+
+function getPrSessionIds(rows) {
+  return new Set(getProgressAnalysis(rows).points.filter((point) => point.isPr).map((point) => point.sessionId));
+}
+
+function getActivePrExerciseKeys() {
+  const keys = new Set();
+  const bestByExercise = new Map();
+  getActiveSessions()
+    .slice()
+    .sort((a, b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt)
+    .forEach((session) => {
+      session.exercises.forEach((exercise) => {
+        const point = getProgressPoint(exercise);
+        const previous = bestByExercise.get(exercise.exerciseId) || 0;
+        if (point.value > previous && point.value > 0) {
+          keys.add(`${session.id}:${exercise.exerciseId}`);
+          bestByExercise.set(exercise.exerciseId, point.value);
+        }
+      });
+    });
+  return keys;
 }
 
 function getProgressPoint(exercise) {
@@ -1192,7 +1223,7 @@ function showSessionDetail(dateValue) {
   if (!sessions.length) return;
   selectedDetailDate = dateValue;
   detailDate.textContent = toDisplayDate(dateValue);
-  detailTitle.textContent = "Workout details";
+  detailTitle.textContent = "Training journal";
   detailSessionCount.textContent = `${sessions.length} ${sessions.length === 1 ? "session" : "sessions"}`;
   detailMetrics.replaceChildren(
     createMetric(`${sessions.reduce((sum, session) => sum + session.exercises.length, 0)} exercises`),
@@ -1201,12 +1232,17 @@ function showSessionDetail(dateValue) {
     createMetric(`${sessions.reduce((sum, session) => sum + getFailureSetCount(session), 0)} failure`),
   );
   detailExercises.replaceChildren();
+  const prExerciseKeys = getActivePrExerciseKeys();
 
   sessions.forEach((session) => {
     const sessionBlock = document.createElement("section");
     sessionBlock.className = "detail-session-block";
+    const prCount = session.exercises.filter((exercise) =>
+      prExerciseKeys.has(`${session.id}:${exercise.exerciseId}`),
+    ).length;
     const exerciseCards = session.exercises
       .map((exercise) => {
+        const isPr = prExerciseKeys.has(`${session.id}:${exercise.exerciseId}`);
         const rows = exercise.sets
           .map((set, index) => {
             if (exercise.mode === TRACKING_TYPES.CARDIO) {
@@ -1219,7 +1255,7 @@ function showSessionDetail(dateValue) {
           <article class="detail-exercise-card">
             <div class="detail-exercise-heading">
               <div>
-                <h3>${escapeHtml(exercise.name)}</h3>
+                <h3>${escapeHtml(exercise.name)}${isPr ? ' <span class="pr-badge">PR</span>' : ""}</h3>
                 <p>${escapeHtml(exercise.muscleGroup)} - ${escapeHtml(modeLabel(exercise.mode))}</p>
               </div>
               <span>${exercise.sets.length} ${exercise.sets.length === 1 ? "set" : "sets"}</span>
@@ -1233,6 +1269,12 @@ function showSessionDetail(dateValue) {
       <div class="detail-session-heading">
         <div>
           <h2>${escapeHtml(session.workoutName)}</h2>
+          <div class="detail-session-meta">
+            <span>${session.exercises.length} exercises</span>
+            <span>${getSessionSets(session)} sets</span>
+            ${getSessionVolume(session) ? `<span>${formatNumber(getSessionVolume(session))} kg volume</span>` : ""}
+            ${prCount ? `<span class="pr-chip">${prCount} PR</span>` : ""}
+          </div>
           <p>${session.notes ? escapeHtml(session.notes) : ""}</p>
         </div>
         <div class="detail-session-actions">
@@ -1369,6 +1411,12 @@ detailExercises.addEventListener("click", (event) => {
 exerciseList.addEventListener("input", (event) => {
   const card = event.target.closest(".exercise-card");
   if (card) updateExerciseSummary(card);
+});
+
+exerciseList.addEventListener("focusin", (event) => {
+  if (event.target.matches('input[type="number"]')) {
+    event.target.select();
+  }
 });
 
 exerciseList.addEventListener("change", (event) => {
